@@ -11,6 +11,7 @@ stages:
   - build
 
 before_script:
+  - apk add --no-cache bash git
   - cd poc/frontend/Hikerz
   - npm ci --cache .npm
   # or with Yarn:
