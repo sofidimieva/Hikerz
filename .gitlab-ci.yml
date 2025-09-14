@@ -11,7 +11,7 @@ stages:
   - build
 
 before_script:
-  - cd poc/frontend/hikerz
+  - cd poc/frontend/Hikerz
   - npm ci --cache .npm
   # or with Yarn:
   #- yarn install --cache-folder .yarn
