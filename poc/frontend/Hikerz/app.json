@@ -8,9 +8,6 @@
     "owner": "filipcirtog",
     "android": {
       "package": "com.team4.hikerz"
-    },
-    "ios": {
-      "bundleIdentifier": "com.team4.hikerz"
     }
   }
 }
