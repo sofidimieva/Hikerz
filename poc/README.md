@@ -46,4 +46,4 @@ This architecture favors ease of implementation while maintaining clear boundari
 
 ### 4. Event Flow Example
 
-![eventflow.png](./img/eventflow.png)
+![eventflow.png](../report/img/eventflow.png)
