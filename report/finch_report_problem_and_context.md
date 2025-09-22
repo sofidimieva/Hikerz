@@ -1,8 +1,7 @@
-## Finch Report – Hikerz: A Privacy-Aware Hiking Network
+## Finch Report – Hikerz: A Social Hiking Network
 
 ### Problem Statement and Motivation
-We propose a new outdoor hiking app named Hikerz which will record hiking routes on mobile applications. While currenttly similar platforms exist (like Strava or Komot), they only provide a series of festures for activity tracking, mainly focused on running, cycling and swimming. Therefore, these platforms present the following three shortcomings:
-- insufficient privacy controls around sensitive location data
+We propose a new outdoor hiking app named Hikerz which will record hiking routes on mobile applications. While currenttly similar platforms exist (like Strava or Komot), they only provide a series of features for activity tracking, mainly focused on running, cycling and swimming. Therefore, these platforms present the following three shortcomings:
 - limited peak-focused progression and gamification for mountaineers
 - lack of strong community features centered around trusted social graphs
 
@@ -14,7 +13,6 @@ Hikerz aspires to serve both casual hikers seeking motivation and dedicated moun
    - Local Authorities: Municipal or regional entities interested in promoting local hiking trails and ensuring safety and environmental protection.
 - Managed Closely
    - Primary Users: Hikers, mountaineers, and outdoor enthusiasts seeking to record, share, and explore hiking routes.
-   - Friends and Family: Benefiting from trusted sharing, ensuring privacy rather than fully public exposure.
 - Monitor (Minimum effort)
    - Amateur Sports People: Casual hikers or fitness enthusiasts exploring trails occasionally.
    - Fitness App Users: Individuals using other fitness tracking platforms who might expand their activities to include hiking.
@@ -26,7 +24,6 @@ Hikerz aspires to serve both casual hikers seeking motivation and dedicated moun
 
 - Context problems
     - Connectivity in the outdoors is intermittent; offline-first design is required.
-    - Privacy risks are high: publishing exact home/work locations may endanger users.
     - Competitive pressure: existing platforms are feature-rich, so differentiation must be clear.
 
 
@@ -66,7 +63,7 @@ Hikerz aspires to serve both casual hikers seeking motivation and dedicated moun
 
 - Trade-offs
     - Privacy vs. Social Sharing: Offering privacy controls (e.g., private vs. public sharing of routes, photos, and stats) can limit the potential for broader social interaction or exposure.
-    - Feature Richness vs. Simplicity: Too many features could risks overwhelming casual users who just want a simple tracking app.
+    - Feature Richness vs. Simplicity: Too many features could risk overwhelming casual users who just want a simple tracking app.
     - Data Storage vs. Performance: Storing photos, route details, and trail statistics requires significant storage space, which may impact device performance
 
 ### Creation of Wardley Maps for Hikerz: From Genesis to Commodity
@@ -125,3 +122,202 @@ By doing this analysis, the team can take multiple conclusions:
     - Genesis to Custom-Built: Focus on refining gamification and tracking features to attract early adopters.
     - Custom-Built to Product: Expand competitive and social features to appeal to a wider audience.
     - Product to Commodity: Continuously innovate competitive mechanics or personalized challenges to lead a market where basic tracking and gamification become standard.
+
+
+
+## Event Storming Process
+
+Event Storming was used to discover domain events, commands, aggregates, policies, and interactions. It provided a shared understanding of system behavior and guided the identification of bounded contexts.
+
+
+### Participants
+
+- 2 domain experts (hikers)
+- 2 developers
+- 1 product owner
+
+
+### Duration
+
+- 1 hour 30 min
+
+
+### Materials
+
+Large wall or virtual board with **color-coded sticky notes**:
+
+- Orange: Domain Events (`HikeLogged`, `PhotoUploaded`)
+- Blue: Commands (`StartHike`, `JoinChallenge`)
+- Green: Aggregates/Actors (`HikeAggregate`, `UserAggregate`)
+- Purple: Policies/Rules (`PrivateHikeCannotBeShared`)
+- Yellow: External Systems (cloud storage, social media APIs)
+
+
+### Steps
+
+1. Big Picture Timeline
+    - Map all domain events chronologically to visualize the flow from hike start to challenge completion.
+
+2. Identify Commands, Aggregates, and Policies
+    - Link commands to the events they trigger.
+    - Identify responsible aggregates for each event.
+    - Clarify business rules and invariants.
+
+3. Mark Hot Spots
+    - Highlight ambiguous or high-risk areas, such as privacy rules, cross-context workflows, or scaling challenges.
+
+4. Define Candidate Bounded Contexts
+    - Propose initial boundaries based on clusters of related events and aggregates.
+
+5. Validate Domain Events and Relationships
+    - Domain experts review events, commands, aggregates, and policies to ensure completeness and correctness.
+
+
+### Event-to-Aggregate Mapping
+
+| Domain Event               | Triggering Command      | Responsible Aggregate | Notes / Policies                   |
+|-----------------------------|------------------------|--------------------|-----------------------------------|
+| `HikeStarted`               | `StartHike`            | HikeAggregate      | Start time recorded                |
+| `HikePaused`                | `PauseHike`            | HikeAggregate      | Intermediate pause state           |
+| `HikeFinished`              | `FinishHike`           | HikeAggregate      | End time recorded                  |
+| `HikeLogged`                | `LogHike`              | HikeAggregate      | Visibility depends on privacy      |
+| `PhotoUploaded`             | `UploadPhoto`          | PhotoAggregate     | Links to hike and user             |
+| `FriendAdded`               | `AddFriend`            | UserAggregate      | Updates friendship invariants      |
+| `FriendRemoved`             | `RemoveFriend`         | UserAggregate      | Updates friendship invariants      |
+| `FriendMapViewed`           | `ViewFriendMap`        | UserAggregate      | Privacy rules enforced             |
+| `ChallengeCreated`          | `CreateChallenge`      | ChallengeAggregate | Rules for scoring established      |
+| `ChallengeJoined`           | `JoinChallenge`        | ChallengeAggregate | Participant added                  |
+| `ChallengeProgressUpdated`  | `UpdateChallenge`      | ChallengeAggregate | Updates leaderboards               |
+| `BadgeAwarded`              | `AwardBadge`           | UserAggregate      | Achievement recognition            |
+
+
+### Outputs from Event Storming 
+
+Domain modeling structured the results from Event Storming into entities, value objects, aggregates, and repositories, clarifying transactional boundaries, data ownership, and relationships.
+
+#### Aggregates
+
+- **HikeAggregate**: Represents a hike, including route, duration, difficulty, and privacy. Ensures private hikes do not affect public projections.  
+  **Operations**: start, pause, finish, log.
+
+- **UserAggregate**: Represents a user profile, friends list, personal hikes, and statistics. Maintains privacy and friendship invariants.
+
+- **ChallengeAggregate**: Manages challenge rules, participants, and progress tracking. Coordinates challenge updates while enforcing scoring rules.
+
+- **PhotoAggregate**: Handles photos uploaded during hikes, including metadata (timestamp, caption, storage URI) and links to hikes and users.
+
+
+#### Entities
+
+- **Hike** (`id`, `owner`, `start_time`, `end_time`, `route`, `duration`, `difficulty`, `privacy`)  
+  Represents a hike. Belongs to `HikeAggregate`.
+
+- **User** (`id`, `username`, `email`, `friends`, `personal_hikes`, `statistics`)  
+  Represents a user profile. Belongs to `UserAggregate`.
+
+- **Challenge** (`id`, `title`, `description`, `rules`, `participants`, `progress`)  
+  Represents a challenge. Belongs to `ChallengeAggregate`.
+
+- **Photo** (`id`, `hike_id`, `user_id`, `timestamp`, `caption`, `storage_uri`)  
+  Represents a photo uploaded during a hike. Belongs to `PhotoAggregate`.
+
+- **Badge** (`id`, `name`, `criteria`, `awarded_to`)  
+  Represents an achievement awarded to users.
+
+#### Value Objects
+
+- **GPXTrack** (`coordinates`, `elevation_profile`)  
+  Represents the GPS track of a hike.
+
+- **Coordinate** (`latitude`, `longitude`)  
+  Represents a geographic point.
+
+- **ElevationProfile** (`points`)  
+  Represents elevation data along a hike.
+
+- **PhotoMetadata** (`timestamp`, `caption`, `storage_uri`)  
+  Metadata associated with a photo.
+
+- **ChallengeProgress** (`user_id`, `progress_value`)  
+  Tracks a user’s progress in a challenge.
+
+### Candidate Bounded Contexts
+
+Bounded contexts group related domain logic, defining **data ownership, invariants, and communication with other contexts**.
+
+#### Contexts
+
+- **Hike Context**  
+  Core domain for logging and tracking hikes. Owns `HikeAggregate`.  
+  **Events**: `HikeStarted`, `HikePaused`, `HikeFinished`, `HikeLogged`.
+
+- **User Context**  
+  Manages user profiles, friendships, and privacy. Owns `UserAggregate`.  
+  Reacts to events like `FriendAdded`, `FriendMapViewed`, `HikeLogged`.
+
+- **Challenge Context**  
+  Handles creation, participation, and progress of challenges. Owns `ChallengeAggregate`.  
+  Updates leaderboards based on `HikeLogged` and `FriendAdded` events.
+
+- **Photo Context**  
+  Manages photo storage, retrieval, and metadata. Owns `PhotoAggregate`.  
+  Publishes `PhotoUploaded` events to Hike and User contexts.
+
+#### Relationships Between Contexts
+
+- **Event-Driven Integration**: Contexts communicate asynchronously via domain events.
+- **Consistency Boundaries**: Aggregates enforce local invariants; cross-context updates rely on eventual consistency.
+
+### Context Relationships Diagram
+
+![relationships.png](./img/relationships.png)
+
+Summary:
+- The diagram represents event-driven, cross-context communication.
+- Hike and Photo events update User and Hike data.
+- User actions update internal aggregates and the Challenge Context.
+- All relationships follow event publishing and consuming, ensuring eventual consistency while keeping contexts decoupled.
+
+### Cross-Context Dependencies
+
+#### 1. Hike Context → User Context (`HikeLogged`)
+- Description: When a hike is logged in the Hike Context, the User Context needs to be updated.  
+- Purpose:
+  - Updates the user's statistics (total distance, duration, completed hikes).  
+  - Ensures that user profiles reflect the latest activities.  
+- Mechanism: Event-driven; `HikeLogged` is published by `HikeAggregate` and consumed by `UserAggregate`.
+
+#### 2. Hike Context → Photo Context (`PhotoUploaded`)
+- Description: Hike-related photos are uploaded and handled by the Photo Context.  
+- Purpose:
+  - Centralizes photo storage and metadata.  
+  - Links photos to the appropriate hikes.  
+- Mechanism: Hike operations trigger `PhotoUploaded` events, sent to the Photo Context.
+
+#### 3. Photo Context → Hike Context (`PhotoUploaded`)
+- Description: After a photo is uploaded, the Hike Context may need to update hike metadata or maps.  
+- Purpose:
+  - Updates hike timelines or maps with new photos.  
+  - Links photo references back to the correct hike.  
+- Mechanism: Photo Context publishes `PhotoUploaded` events, consumed by HikeContext aggregates.
+
+#### 4. Photo Context → User Context (`PhotoUploaded`)
+- Description: Photo uploads also affect user data.  
+- Purpose:
+  - Tracks user contributions, galleries, or photo history.  
+  - May trigger achievements or badges related to photo sharing.  
+- Mechanism: Event-driven; User Context consumes `PhotoUploaded` events.
+
+#### 5. User Context → User Context (`FriendAdded`, `FriendRemoved`, `FriendMapViewed`)
+- Description: User-to-user interactions primarily affect the same context.  
+- Purpose: 
+  - Maintains friendship relationships, privacy rules, and view permissions.  
+  - Ensures user activity updates the appropriate aggregates internally.  
+- Mechanism: Internal events/commands update `UserAggregate`.
+
+#### 6. User Context → Challenge Context (`ChallengeJoined`, `ChallengeCompleted`)
+- Description: User actions related to challenges are communicated to the Challenge Context.  
+- Purpose: 
+  - Tracks challenge participants (`ChallengeJoined`).  
+  - Updates progress, leaderboards, and awards on completion (`ChallengeCompleted`).  
+- Mechanism: User Context publishes events consumed by `ChallengeAggregate` to update challenge data.
