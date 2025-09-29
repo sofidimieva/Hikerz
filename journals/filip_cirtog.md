@@ -12,3 +12,4 @@
 - Research which Beckend should our POC use with respect to the future of Hikerz (4 hours)
 - Create the Backend Boilerplate (10 hours)
 # Week 5
+- Adjust the Backend Boilerplate to include both microservices and add a readme file. (3 hours)
