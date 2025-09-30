@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 
 @RestController
-@RequestMapping("/api/activity")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -29,9 +29,9 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public void createUser(@RequestBody UserRequest activityRequest) {
+    public void createUser(@RequestBody UserRequest userRequest) {
         
-        userService.createUser(activityRequest);;
+        userService.createUser(userRequest);;
     }
 
     @GetMapping
