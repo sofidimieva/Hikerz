@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import org.locationtech.jts.geom.LineString;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 
 @Entity
@@ -22,5 +24,9 @@ public class Activity {
 
     private String title;
     private String description;
+
+    @Column(columnDefinition = "geometry(LineString,4326)")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
+    private LineString route;
 
 }

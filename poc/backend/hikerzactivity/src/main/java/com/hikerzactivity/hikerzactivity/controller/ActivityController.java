@@ -1,7 +1,9 @@
 package com.hikerzactivity.hikerzactivity.controller;
 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.hikerzactivity.hikerzactivity.dto.ActivityRequest;
 import com.hikerzactivity.hikerzactivity.dto.ActivityResponse;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
@@ -32,6 +35,12 @@ public class ActivityController {
     public void createActivity(@RequestBody ActivityRequest activityRequest) {
         
         activityService.createActivity(activityRequest);;
+    }
+
+    @PostMapping("/upload-gpx")
+    public ResponseEntity<?> uploadGpx(@RequestParam("file") MultipartFile file) throws Exception {
+        activityService.importGpx(file);
+        return ResponseEntity.ok("GPX uploaded");
     }
 
     @GetMapping
