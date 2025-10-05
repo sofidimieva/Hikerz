@@ -1,0 +1,9 @@
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/CustomRepository.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/HikerzActivityApplication.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/RepositoryService.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/controller/ActivityController.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/dto/ActivityRequest.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/dto/ActivityResponse.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/model/Activity.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/repository/ActivityRepository.java
+/Users/bogdanparamon/Desktop/Delft/Masters/Software Architecture/team-4/poc/backend/hikerzactivity/src/main/java/com/hikerzactivity/hikerzactivity/service/ActivityService.java
