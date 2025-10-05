@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.hikerzactivity.hikerzactivity.model.Activity;
 import com.hikerzactivity.hikerzactivity.dto.ActivityRequest;
 import com.hikerzactivity.hikerzactivity.dto.ActivityResponse;
@@ -27,6 +29,15 @@ public class ActivityService {
     public List<ActivityResponse> getAllActivities(){
         List<Activity> activities = activityRepository.findAll(); 
         return activities.stream().map(activity -> mapToActivityResponse(activity)).toList();
+    }
+
+    public void importGpx(MultipartFile file) throws Exception {
+    // TODO: parse the GPX file, convert it to LineString and save to DB
+
+    // Example: log filename just to verify
+    System.out.println("Received file: " + file.getOriginalFilename());
+
+    // Later: parse GPX and persist route as LineString
     }
 
     private ActivityResponse mapToActivityResponse(Activity activity){

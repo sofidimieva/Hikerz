@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgis/postgis:16-3.4      # PostgreSQL 16 + PostGIS 3.4
+    container_name: hikerz-db
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - hikerz_pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d   # runs *.sql/*.sh on FIRST start only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: hikerz-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"   # open pgAdmin at http://localhost:5050
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - db
+
+volumes:
+  hikerz_pgdata:
