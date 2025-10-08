@@ -1,7 +1,8 @@
-import { ScrollView, View, Text } from "react-native";
 import { styled } from "@gluestack-style/react";
-import { ProfileCard } from "../../components/ui/ProfileCard";
+import { Bell, Send, Settings } from "lucide-react-native";
+import { ScrollView, Text, View } from "react-native";
 import { ActivityCard } from "../../components/ui/ActivityCard";
+import { ProfileCard } from "../../components/ui/ProfileCard";
 
 // Local photos uploaded to components/photos/
 const local = {
@@ -12,7 +13,6 @@ const local = {
     forest2: require('../../components/photos/forest2.webp'),
     forest3: require('../../components/photos/forest3.webp'),
 };
-import { Home, List, Circle, Map, Settings, Bell, Send } from "lucide-react-native";
 
 const Container = styled(View, {
     flex: 1,

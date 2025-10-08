@@ -1,7 +1,7 @@
 import ChallengesPage from "@/pages/ChallengePage";
-import { StyleSheet } from 'react-native';
-import { GluestackUIProvider } from '@gluestack-ui/themed';
 import { config } from '@gluestack-ui/config';
+import { GluestackUIProvider } from '@gluestack-ui/themed';
+import { StyleSheet } from 'react-native';
 
 export default function ChallengesScreen() {
   return (
