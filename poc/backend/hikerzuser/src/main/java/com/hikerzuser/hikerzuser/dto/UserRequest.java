@@ -8,6 +8,9 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class UserRequest {
-    private String title;
+    private String username;
+    private String name;
+    private String email;
     private String description;
+    private String avatar_url;
 }
