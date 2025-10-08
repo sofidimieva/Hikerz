@@ -1,124 +1,103 @@
-import { Image } from 'expo-image';
-import { StyleSheet } from 'react-native';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { ScrollView, View, Text } from "react-native";
+import { styled } from "@gluestack-style/react";
+import { ProfileCard } from "../../components/ui/ProfileCard";
+import { ActivityCard } from "../../components/ui/ActivityCard";
 
-export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.headerArt}
-        />
-      }
-    >
-      {/* Title */}
-      <ThemedView style={styles.titleRow}>
-        <ThemedText type="title">TrailShare</ThemedText>
-        <ThemedText type="default" style={styles.subtitle}>
-          Turn solo hikes into shared experiences.
-        </ThemedText>
-      </ThemedView>
+// Local photos uploaded to components/photos/
+const local = {
+    dolomites1: require('../../components/photos/dolomites1.jpg'),
+    dolomites2: require('../../components/photos/dolomites2.avif'),
+    dolomites3: require('../../components/photos/dolomites3.jpg'),
+    forest1: require('../../components/photos/forest1.webp'),
+    forest2: require('../../components/photos/forest2.webp'),
+    forest3: require('../../components/photos/forest3.webp'),
+};
+import { Home, List, Circle, Map, Settings, Bell, Send } from "lucide-react-native";
 
-      {/* One-liner / purpose */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">Why TrailShare?</ThemedText>
-        <ThemedText>
-          Hiking is often a solo activity with few ways to connect. Inspired by running
-          apps like Strava, TrailShare builds community around the trail—so you can
-          discover, share, and stay motivated.
-        </ThemedText>
-      </ThemedView>
+const Container = styled(View, {
+    flex: 1,
+    bg: "$gray100",
+});
 
-      {/* Primary functions */}
-      <ThemedView style={styles.card}>
-        <ThemedText type="subtitle">What you can do</ThemedText>
-        <ThemedText>{'• Log hikes (route, distance, time, difficulty)'}</ThemedText>
-        <ThemedText>{'• See your interactive map of completed hikes'}</ThemedText>
-        <ThemedText>{'• Explore friends’ maps & popular trails'}</ThemedText>
-        <ThemedText>{'• Upload & share photos for each activity'}</ThemedText>
-        <ThemedText>{'• View per-route stats (e.g., avg duration/difficulty)'}</ThemedText>
-        <ThemedText>{'• Create or join challenges for motivation'}</ThemedText>
-      </ThemedView>
+const Header = styled(View, {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    bg: "$green700",
+    p: "$4",
+});
 
-      {/* Quick actions */}
-      <ThemedView style={styles.actions}>
-        <Link href="/log" asChild>
-          <ThemedView style={[styles.actionBtn, styles.primary]}>
-            <ThemedText type="defaultSemiBold">Log a Hike</ThemedText>
-          </ThemedView>
-        </Link>
+const HeaderText = styled(Text, {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "white",
+});
 
-        <Link href="/explore" asChild>
-          <ThemedView style={styles.actionBtn}>
-            <ThemedText type="defaultSemiBold">Explore Routes</ThemedText>
-          </ThemedView>
-        </Link>
+const Row = styled(View, {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: "$4",
+});
 
-        <Link href="/challenges" asChild>
-          <ThemedView style={styles.actionBtn}>
-            <ThemedText type="defaultSemiBold">Join a Challenge</ThemedText>
-          </ThemedView>
-        </Link>
-      </ThemedView>
-
-      {/* Inspiration / motivation footer */}
-      <ThemedView style={styles.footer}>
-        <ThemedText type="default">
-          Motivation: connection, discovery, and healthy activity.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
-  );
-}
-
-const styles = StyleSheet.create({
-  headerArt: {
-    height: 180,
-    width: 300,
-    position: 'absolute',
+const BottomNav = styled(View, {
+    position: "absolute",
     bottom: 0,
     left: 0,
-  },
-  titleRow: {
-    gap: 4,
-    marginBottom: 4,
-  },
-  subtitle: {
-    opacity: 0.8,
-  },
-  card: {
-    gap: 6,
-    padding: 12,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.08)',
-    marginBottom: 12,
-  },
-  actions: {
-    gap: 10,
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  actionBtn: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(0,0,0,0.12)',
-  },
-  primary: {
-    borderColor: 'transparent',
-    backgroundColor: 'rgba(0,0,0,0.06)',
-  },
-  footer: {
-    marginTop: 8,
-    alignItems: 'center',
-    opacity: 0.8,
-  },
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    bg: "$gray50",
+    borderTopWidth: "$1",
+    borderTopColor: "$gray200",
+    p: "$2",
 });
+
+export default function HomePage() {
+    const hikes = [
+        {
+            title: "Morning Hike in the Alps",
+            description: "Scenic route with amazing views.",
+            distance: "14.7 km",
+            elevation: "1,160 m",
+            achievements: 2,
+            likes: 24,
+            images: [local.dolomites1, local.dolomites2, local.dolomites3],
+            elevationProfile:
+                'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=800&h=200&fit=crop',
+        },
+        {
+            title: "Evening Forest Hike",
+            description: "Quiet trail through the woods.",
+            distance: "7.2 km",
+            elevation: "320 m",
+            achievements: 1,
+            likes: 12,
+            images: [local.forest1, local.forest2, local.forest3],
+        },
+    ];
+
+    return (
+        <Container>
+            {/* Header */}
+            <Header>
+                <HeaderText>Home</HeaderText>
+                <Row>
+                    <Send color="white" />
+                    <Bell color="white" />
+                    <Settings color="white" />
+                </Row>
+            </Header>
+
+            <ScrollView>
+                {/* Profile */}
+                <ProfileCard name="Polly Dimieva" followers={120} following={80} />
+
+                {/* Hikes */}
+                {hikes.map((hike, idx) => (
+                    <ActivityCard key={idx} {...hike} />
+                ))}
+            </ScrollView>
+           
+        </Container>
+    );
+}
