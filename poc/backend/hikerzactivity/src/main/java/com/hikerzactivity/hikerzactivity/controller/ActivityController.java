@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 
@@ -47,6 +49,24 @@ public class ActivityController {
     @ResponseStatus(HttpStatus.OK)
     public List<ActivityResponse> getAllActivities() {
         return activityService.getAllActivities();
+    }
+
+    @GetMapping("/{id}/geojson")
+    public ResponseEntity<String> getHikeGeoJson(@PathVariable Long id) {
+        String geoJson = activityService.getHikeAsGeoJson(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(geoJson);
+    }
+
+    @GetMapping("/{id}/mapbox-static")
+    public ResponseEntity<byte[]> getHikeStatic(@PathVariable Long id,
+                                                @RequestParam(defaultValue = "800") int w,
+                                                @RequestParam(defaultValue = "600") int h) {
+        byte[] png = activityService.getMapboxStaticPng(id, w, h);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(png);
     }
     
     
