@@ -1,7 +1,7 @@
 package com.hikerzuser.hikerzuser.controller;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.hikerzuser.hikerzuser.dto.PaginatedResponse;
+import org.springframework.web.bind.annotation.*;
 
 import com.hikerzuser.hikerzuser.dto.UserRequest;
 import com.hikerzuser.hikerzuser.dto.UserResponse;
@@ -9,16 +9,9 @@ import com.hikerzuser.hikerzuser.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
-
 
 @RestController
 @RequestMapping("/api/user")
@@ -30,15 +23,38 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public void createUser(@RequestBody UserRequest userRequest) {
-        
-        userService.createUser(userRequest);;
+        userService.createUser(userRequest);
     }
 
-    @GetMapping
+    @GetMapping("/single/{username}")
     @ResponseStatus(HttpStatus.OK)
-    public List<UserResponse> getAllUsers() {
-        return userService.getAllUsers();
+    public UserResponse getUser(@PathVariable String username) {
+        return userService.getUser(username);
     }
-    
-    
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NoSuchElementException.class)
+    public String handleNotFound(NoSuchElementException ex) {
+        return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public String handleBadRequest(IllegalArgumentException ex) {
+        return ex.getMessage();
+    }
+
+    @GetMapping("/all/{username}")
+    @ResponseStatus(HttpStatus.OK)
+    public PaginatedResponse<UserResponse> getAllUsers(
+            @PathVariable String username,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String q) {
+
+        String query = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+
+        return userService.getAllUsers(username, page, size, query);
+    }
+
 }
