@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface UserRepository extends CustomRepository<User, String>{
 
     @Query("""
@@ -21,5 +23,19 @@ public interface UserRepository extends CustomRepository<User, String>{
             @Param("current") String currentUsername,
             @Param("q") String query,
             Pageable pageable
+    );
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE LOWER(u.username) <> LOWER(:current)
+          AND (
+            :q IS NULL OR :q = '' OR
+            LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%')) OR
+            LOWER(u.name)     LIKE LOWER(CONCAT('%', :q, '%'))
+          )
+        """)
+    List<User> searchAllExcludingCurrentNonPaginated(
+            @Param("current") String currentUsername,
+            @Param("q") String query
     );
 }

@@ -9,6 +9,7 @@ import com.hikerzuser.hikerzuser.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,13 @@ public class UserController {
     @ResponseStatus(HttpStatus.CREATED)
     public void createUser(@RequestBody UserRequest userRequest) {
         userService.createUser(userRequest);
+    }
+
+
+    @PostMapping("/populate")
+    @ResponseStatus(HttpStatus.CREATED)
+    public void populateUsers() {
+        userService.populateUsers(); // Call service to populate 40 users
     }
 
     @GetMapping("/single/{username}")
@@ -55,6 +63,17 @@ public class UserController {
         String query = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
 
         return userService.getAllUsers(username, page, size, query);
+    }
+
+    @GetMapping("/all/notPaginated/{username}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<UserResponse> getAllUsersNotPaginated(
+            @PathVariable String username,
+            @RequestParam(required = false) String q) {
+
+        String query = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+
+        return userService.getAllUsersNotPaginated(username, query);
     }
 
 }
