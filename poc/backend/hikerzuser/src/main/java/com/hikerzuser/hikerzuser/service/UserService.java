@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,6 +46,25 @@ public class UserService {
         log.info("User {} is saved", user.getUsername());
     }
 
+    public void populateUsers() {
+        // Create 40 dummy users
+        List<User> users = IntStream.range(0, 1000)
+                .mapToObj(i -> {
+                    return User.builder()
+                            .username("user" + i)
+                            .name("User " + i)
+                            .email("user" + i + "@example.com")
+                            .description("This is a description for User " + i)
+                            .avatar_url("https://randomuser.me/api/portraits/lego/" + (i % 10) + ".jpg")
+                            .build();
+                })
+                .collect(Collectors.toList());
+
+        // Save all users to the database in one go
+        userRepository.saveAll(users);
+        log.info("Populated the database with 40 users");
+    }
+
     public PaginatedResponse<UserResponse> getAllUsers(String username, int page, int size, String q) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "username"));
@@ -60,6 +81,13 @@ public class UserService {
                 .totalPages(usersPage.getTotalPages())
                 .totalItems(usersPage.getTotalElements())
                 .build();
+    }
+
+    public List<UserResponse> getAllUsersNotPaginated(String username,String q) {
+        List<User> users = userRepository.searchAllExcludingCurrentNonPaginated(username, q);
+        return users.stream()
+                .filter(user -> !user.getUsername().equals(username))
+                .map(this::mapToUserResponse).toList();
     }
 
     public UserResponse getUser(String username) {
