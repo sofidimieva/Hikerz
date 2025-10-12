@@ -44,4 +44,3 @@
 - integrated this with the GET request on endpoint /activity to test saving to DB 
 - integrated this with the GET request on endpoint /activity/mapbox-static to test mapbox visualization 
 
-
