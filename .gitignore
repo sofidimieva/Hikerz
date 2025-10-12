@@ -1,0 +1,13 @@
+# Local environment files
+poc/infra/docker/.env
+
+# IntelliJ / VSCode
+.idea/
+.vscode/
+
+# Node
+node_modules/
+
+# Maven
+poc/backend/hikerzactivity/target/
+poc/backend/hikerzuser/target/
