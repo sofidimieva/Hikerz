@@ -41,3 +41,8 @@
 - Test database interaction with current APIs (3 hours)  
 - Remove old SQL and H2 database setup (1 hours)  
 - Research best practices for handling geospatial queries with PostGIS (4 hours)  
+
+# Week 6
+
+- Make 6 sequence diagrams for the main user flows (5 hours)
+- Work on heron report (6 hours)

@@ -507,18 +507,81 @@ The Code diagram provides a detailed view of a specific component, the Activity 
 
 ### 2. Sequence Diagrams
 
-#### 2.1 Scenario A — Create Hike
+Additionally , the system’s dynamic behavior is modelled by Sequence Diagrams. 
+These diagrams capture runtime interactions among users, frontend, backend 
+microservices, databases, and external APIs, illustrating how the architecture supports 
+functional requirements and quality attributes such as performance, scalability, and 
+separation of concerns. Each diagram represents a core user-driven scenario in the Hikerz 
+system. By decomposing them individually, we highlight service responsibilities and 
+boundaries while maintaining traceability to the problem statement and architectural 
+decisions.  
 
-#### 2.2 Scenario B — View “My Hikes”
 
-#### 2.3 Scenario C — View “Friends’ Hikes”
+#### 2.1 Scenario A — Create Hike  
 
-#### 2.4 Scenario D — Join Challenge
+This diagram shows the flow when a user logs a new hike by submitting metadata (title, 
+distance, difficulty) and attachments (GPX + image). 
+The Activity Service validates input, parses the GPX file into geometry, stores the hike in 
+PostgreSQL/PostGIS, and returns a confirmation response to the frontend. 
+Optionally, a HikeLogged event is published to Redis for asynchronous updates to statistics 
+and leaderboards.  
+
+![Scenario A — Create Hike](./img/A.png)  
+*Figure 1: Sequence diagram for the "Create Hike" scenario.*
+
+#### 2.2 Scenario B — View “My Hikes”  
+For the user to view their previously logged hikes, the Frontend requests the list of hikes 
+from the Activity Service, which queries the Activity Database and returns paginated results. 
+For each hike, GeoJSON route data is fetched separately and rendered interactively via 
+Mapbox, ensuring efficient data transfer and scalable rendering. 
+This process allows the user to visually explore their activity history with minimal loading 
+time.  
+
+![Scenario B — View “My Hikes”](./img/B.png)  
+*Figure 2: Sequence diagram for the "View My Hikes" scenario.*
+
+#### 2.3 Scenario C — View “Friends’ Hikes” 
+For the user to discover hikes shared by friends, the Frontend first retrieves the friend list 
+from the User Service, then queries the Activity Service for public or friend-visible hikes. 
+Each route is fetched as GeoJSON and rendered through Mapbox, while privacy filtering is 
+enforced server-side. 
+This flow demonstrates how cross-service data retrieval supports community-based features 
+while maintaining secure visibility rules.  
+
+![Scenario C — View “Friends’ Hikes”](./img/C.png)  
+*Figure 3: Sequence diagram for the "View Friends’ Hikes" scenario.*
+
+#### 2.4 Scenario D — Join Challenge  
+For the user to participate in an active challenge, the Frontend sends a request to the 
+Challenge Service, which records the user’s participation in the Challenge Database. 
+The User Service is then updated to reflect the new joined challenge. 
+This sequence highlights controlled data consistency and interaction between the Challenge 
+and User bounded contexts.  
+
+![Scenario D — Join Challenge](./img/D.png)  
+*Figure 4: Sequence diagram for the "Join Challenge" scenario.*
 
 #### 2.5 Scenario E — Create Challenge
+For the user to create a new challenge, the Challenge Service validates the input data and 
+stores the new challenge in the Challenge Database. 
+It then triggers an update in the User Service to associate the challenge ownership with the 
+creator. 
+This scenario demonstrates the enforcement of the Separation of Concerns (SoC) principle, 
+ensuring clean ownership boundaries across services.  
 
-#### 2.6 Scenario F — View Statistics
+![Scenario E — Create Challenge](./img/E.png)  
+*Figure 5: Sequence diagram for the "Create Challenge" scenario.*
 
+#### 2.6 Scenario F — View Statistics  
+For the user to analyze their hiking performance, the Frontend requests aggregated statistics 
+from the Activity Service. 
+The service executes spatial and numerical aggregations directly in PostGIS, returning a 
+summary JSON object containing total distance, elevation gain, and average pace. 
+The frontend visualizes this data locally through charts and summaries, providing an 
+interactive performance dashboard with minimal latency.  
+
+![Scenario F — View Statistics](./img/F.png)  
+*Figure 6: Sequence diagram for the "View Statistics" scenario.*
 ---
 
 ### 3. Elaboration of Specific Architectural Decisions and Alternatives
@@ -527,13 +590,17 @@ The Code diagram provides a detailed view of a specific component, the Activity 
 
 #### 3.2 Architecture Styles
 - Monolith vs Microservice vs Modular Monolith  
+For Hikerz, the choice of architecture was a critical decision. We selected a microservices architecture because it offers significant advantages in scalability, service isolation, and independent deployment per domain (User, Activity, Challenge). To manage initial complexity, we adopted a "MonolithFirst" strategy by allowing for a modular monolith fallback, a practice advocated by Fowler (2015) as a pragmatic path toward a microservices-based system. This approach aligns with our strategic goals to support interactive maps, independently scale geospatial workloads, and evolve components without redeploying the entire system.  
+
+While a pure monolith simplifies initial deployment and testing, it often limits long-term flexibility and growth. A modular monolith offers a strong middle ground, but it still ties all modules into a single runtime. As detailed by Newman (2021), microservices provide maximum modular autonomy and granular scalability at the cost of greater operational overhead. This trade-off includes managing challenges such as service discovery, inter-service latency, and distributed data consistency, which we plan to address with a dedicated platform infrastructure.  
+
 - Separation of Concerns (SoC) Principle
   - Separation of Concerns (SoC) is a software design and engineering discipline aimed at breaking down complex systems into more manageable and understandable components. The core idea is to organize the system in such a way that each part is responsible for a single concern, or a well-defined aspect of functionality, without overlapping concerns.  By implementing SoC, a system’s **modularity**, **maintainability**, and **scalability** are significantly increased.
   - In the **Hikerz** codebase, we adhere to this principle by ensuring clear separation between various parts of the application:
     - **Service**: Houses the functional logic of the system.
     - **Controller**: Serves as the point of entry for incoming requests.
     - To ensure clean architecture and decouple the internal model from the external API representation, the results from retrieving entities from the repository are mapped to a **Data Transfer Object (DTO)**.
-    - Example of SoC in the Hikerz codebase.![SOC Example](report/img/SOC.jpg)
+    - Example of SoC in the Hikerz codebase.![SOC Example](./img/SOC.jpg)
 
 #### 3.3 Quality Assurance
 -  Unit Tests (Backend Java Unit Tests) - Unit tests verify that individual components of the backend (e.g., services, controllers) work as expected.
@@ -625,16 +692,67 @@ In designing the HTTP API for our microservices, a critical architectural decisi
             
           - | Metric                | Paginated                                                                 | Non Paginated                                                               |
             |-----------------------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-            | Http Performance      | ![Http Performance Pag](report/img/pag-experiment/pag-http-performance.png)| ![Http Performance Non Pag](report/img/pag-experiment/non-pag-http-performance.png)                      |
-            | Http Request Duration | ![Http Request Duration Pag](report/img/pag-experiment/http-req-dur-pag.png)   | ![Http Request Duration Non Pag](report/img/pag-experiment/http-req-dur-non-pag.png) |
-            | VU Number             | ![VU Number Pag](report/img/pag-experiment/vu-pag.png)                     | ![VU Number Non Pag](report/img/pag-experiment/vu-non-pag.png)               |
+            | Http Performance      | ![Http Performance Pag](./img/pag-experiment/pag-http-performance.png)| ![Http Performance Non Pag](./img/pag-experiment/non-pag-http-performance.png)                      |
+            | Http Request Duration | ![Http Request Duration Pag](./img/pag-experiment/http-req-dur-pag.png)   | ![Http Request Duration Non Pag](./img/pag-experiment/http-req-dur-non-pag.png) |
+            | VU Number             | ![VU Number Pag](./img/pag-experiment/vu-pag.png)                     | ![VU Number Non Pag](./img/pag-experiment/vu-non-pag.png)               |
 
 
 ---
 
 ### 4. Assessment of impact of Cloud vs On-Premises Deployment
 
-#### 4.1 PostgreSQL Deployment Evaluation
+#### 4.1 PostgreSQL
+An essential architectural decision for Hikerz concerned the deployment 
+model for persistent data storage across its microservices (User, Activity, and 
+Challenge). The decision had to balance performance, scalability, cost, and 
+geospatial query efficiency, given Hikerz’s heavy reliance on map-based 
+functionality and spatial analysis.
+
+The evaluation considered three primary options: Amazon S3 (Cloud Object 
+Storage), a Cloud Relational Database Service (AWS RDS for PostgreSQL), 
+and a dedicated On-Premises PostgreSQL deployment. Each option was 
+assessed for its ability to support Hikerz’s core requirements for 
+ACID-compliant transactions, complex spatial queries, and low-latency data 
+access.
+
+Amazon S3 was initially considered for its scalability, durability, and low 
+operational cost (DBSync, 2025). However, as an object storage service, S3 
+lacks the transactional and relational capabilities required for user data, hikes, 
+and challenges. It does not enforce ACID properties or support SQL queries 
+and geospatial operations (AWS Documentation, 2025), making it unsuitable 
+as a primary data store. While S3 performs well for static assets such as images 
+or GPX files, it cannot replace a relational database for dynamic, 
+query-intensive data.
+
+Cloud RDBMS solutions such as AWS RDS for PostgreSQL were also 
+evaluated for their elasticity and reduced administrative burden 
+(Gart Solutions, 2025; Tinybird, 2025). Managed services automate replication, 
+scaling, and backups, simplifying deployment. However, these benefits come 
+at the cost of limited configuration control, potential vendor lock-in, and 
+variable network latency. For Hikerz, this lack of fine-grained tuning is 
+critical, especially for PostGIS-based spatial queries that must execute in 
+milliseconds to support map rendering and route visualization.
+
+Ultimately, Hikerz adopted an on-premises PostgreSQL deployment model, 
+assigning a dedicated instance to each microservice. This approach provides 
+complete control over the database configuration, hardware allocation, and 
+indexing strategy, ensuring predictable performance and low-latency access. 
+The ability to directly optimize PostGIS and manage data locality gives 
+on-premises PostgreSQL a significant advantage for geospatially intensive 
+workloads (Blake, 2025; EDB, 2025). While this decision increases initial setup 
+and maintenance costs, it ensures long-term scalability, compliance, and 
+autonomy over the system’s most critical data layer.
+
+Criterion | Amazon S3 (Cloud Object Storage) | Cloud RDBMS (AWS RDS for PostgreSQL) | On-Premises PostgreSQL
+---|---|---|---
+Type | Object storage | Managed relational database | Self-managed relational database
+Data Model | Key-value (unstructured) | Structured, relational | Structured, relational
+Transactional Support (ACID) | Not supported (AWS Documentation, 2025) | Supported | Supported
+Geospatial Capabilities | None | PostGIS supported (limited tuning) (EDB, 2025) | Full PostGIS support with hardware-level tuning (EDB, 2025)
+Performance and Latency | Optimized for storage, not query performance | Moderate, network-dependent (Blake, 2025) | High performance, low latency (Blake, 2025)
+Scalability | Extremely high (DBSync, 2025) | High (automated scaling) | Scalable with manual configuration
+Control and Customization | Minimal | Limited (provider templates) | Full administrative and hardware control (Ali et al., 2024)
+Cost Model | Low operational cost (Gart Solutions, 2025) | Moderate recurring cost (Tinybird, 2025) | Higher initial cost, lower long-term operational cost (Tinybird, 2025)
 
 #### 4.2 Mapbox
 
@@ -751,3 +869,12 @@ While the Event Bus within Modular Monolith (Option 3) offers the simplest start
 ---
 
 ### References
+- Fowler, M. (2015, June 3). *MonolithFirst.* Retrieved from [https://martinfowler.com/bliki/MonolithFirst.html](https://martinfowler.com/bliki/MonolithFirst.html)  
+- Newman, S. (2021). *Building Microservices: Designing Fine-Grained Systems* (2nd ed.). O’Reilly Media. 
+- AWS Documentation. (2025). Choosing an AWS Database Service. Retrieved from https://aws.amazon.com/  
+- DBSync. (2025). Object Storage vs. Databases for Data Replication. Retrieved from https://www.dbsync.com/  
+- Blake, H. (2025). Evaluating Cloud vs. On-Premises PostgreSQL Deployments. ResearchGate. Retrieved from https://www.researchgate.net/  
+- Gart Solutions. (2025). Cloud vs. On-Premises: Choosing the Right Path for Your Data. Retrieved from https://gartsolutions.com/  
+- Tinybird. (2025). Cloud vs. On-Premise Analytics: Cost Analysis. Retrieved from https://www.tinybird.co/  
+- Ali, A., et al. (2024). Systematic Analysis of On-Premise and Cloud Services. International Journal of Cloud Computing.  
+- EDB. (2025). PostGIS for Spatial Data. Retrieved from https://www.enterprisedb.com/  
