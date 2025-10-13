@@ -21,5 +21,10 @@
 
 # Week 5
 
-- Aim: Work on map visualisation (estimate: 10-14 hours)
-- If above is blocked: Implement part of the frontend + help with progress for the blockers (estimate 10-14 hours)
+- Research and work on map visualisation (14 hours)
+- Investigate how to tie mapping communication together (4 hours)
+
+# Week 6
+
+- Gather reasearch and fill in section in heron report on the Mapping service used compared to alternatives (10 hours)
+- Look into stress testing options and how to apply them to our project instance (4 hours)
