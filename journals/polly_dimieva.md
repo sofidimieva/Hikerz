@@ -40,7 +40,10 @@
 
 
 # Week 6
-- created a POST request on /activity/upload-gpx endpoint which takes a GPX file as body 
-- integrated this with the GET request on endpoint /activity to test saving to DB 
-- integrated this with the GET request on endpoint /activity/mapbox-static to test mapbox visualization 
+- created a POST request on /activity/upload-gpx endpoint which takes a GPX file as body (2 hours)
+- integrated this with the GET request on endpoint /activity to test saving to DB (1 hour)
+- integrated this with the GET request on endpoint /activity/mapbox-static to test mapbox visualization  (1 hour)
+- followed the C4 Model by creating 4 diagrams for visual abstraction (6 hours)
+- researched on event communication patterns and did a comparative study (2 h)
+- add corresponding sections to the Heron report (2 hours)
 
