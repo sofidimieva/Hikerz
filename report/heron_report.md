@@ -1,4 +1,4 @@
-## Finch Report – Hikerz: A Social Hiking Network
+## Hikerz: A Social Hiking Network
 
 ### Problem Statement and Motivation
 We propose a new outdoor hiking app named Hikerz which will record hiking routes on mobile applications. While currenttly similar platforms exist (like Strava or Komot), they only provide a series of features for activity tracking, mainly focused on running, cycling and swimming. Therefore, these platforms present the following three shortcomings:
@@ -385,80 +385,141 @@ The user experience should align with the chosen pricing model. For instance, a 
 
 The choice of pricing model directly affects the design and scalability of the system architecture. Whether adopting subscription-based, pay-per-use, freemium, or tiered pricing, the system must be designed to accommodate the specific requirements of each model. Scalability, flexibility, security, and user experience are all key architectural considerations that must align with the pricing strategy to ensure a seamless and efficient business solution. By understanding the architectural implications of each pricing model, businesses can create solutions that not only support growth but also enhance user satisfaction and operational efficiency.
 
-## Heron Report – Architecture Development and Design Decisions
+## Architecture Development and Design Decisions
 
-### 1. Description of Architecture Addressing Problem Statement
 
-#### 1.1 System Context: Hikers Mobile App
-- Overview of the system’s purpose and scope  
+### 1. C4 Model
+To effectively communicate and document the system’s architecture, the C4 model was adopted. The C4 model provides a structured and hierarchical way to visualize software architecture at different levels of detail, ensuring clarity and alignment across technical and non-technical stakeholders. It breaks down the system into four key diagram types:
+- Context Diagram (C1): Offers a high-level overview of the system and its interactions with external users and systems.
+- Container Diagram (C2): Illustrates the main containers (such as web applications, databases, APIs, etc.) that make up the system and how they communicate.
+- Component Diagram (C3): Provides a deeper look into each container, detailing the major components, their responsibilities, and interactions.
+- Code Diagram (C4): Focuses on the internal structure of specific components, showing classes, modules, and relationships at the code level.
+By using C4 diagrams, the architecture of the POC is presented in a way that supports progressive detail, starting from a broad system overview and drilling down into implementation specifics. This approach improves traceability, team communication, and maintainability, aligning with modern software engineering practices.
+
+
+#### **Context Diagram (C1)**
+
+![C1.jpg](./img/C1.jpg)
+The Context diagram shows the Hikers Mobile App and its relationship with the end-users and key external systems, establishing the system's purpose and scope.
+
+The Hikers Mobile App is a system designed to connect individuals (End Users) looking to explore new hiking routes, meet other enthusiasts, and build hiking communities. The application acts as a central hub, interacting with various users and external services to deliver its core features.
 - Users and Stakeholders  
+  - End Users (People): The primary users who explore routes, view friends' activities, and build communities.
+  - Tourist Groups (People/Organization): Groups or individuals who organize hiking trips and provide trip-related data (e.g., transport, accommodation) to the app.
+  - Advertisers (Organization): Businesses that pay to promote their locations within the app, providing sponsored location data.
+
 - External Systems
+  - Location Service (Software System): Provides essential geographical capabilities, including geolocation, maps, and navigation information to support location-based features.
+  - Third Party Map API (Software System): An external API dedicated to providing visual maps for the routes and logged activities.
+  - Notification Service (Software System): Handles the delivery of real-time push notifications to user devices.
+  - Recommendation Engine (Software System): A collaborative filtering system that provides personalized route suggestions to users.
+  - Authentication Service (Software System): Manages user login and identity, supporting secure login methods like third-party sign-in (e.g., Google, Facebook).
+
 
 ---
 
-### 2. Adoption of Selected Architectural Development Techniques
+#### **Container Diagram (C2)**
 
-#### 2.1 Proof of Concept (POC) Validation  
-#### 2.2 C4 Model for Visual Abstraction  
-- **Container Diagram (C2)**
+![C2.jpg](./img/C2.jpg)
   - Core Components
+    - Mobile Client (container: iOS/Android app): The user-facing application for exploring routes, viewing friends' activities, and posting new activities. It communicates with the Backend API via RESTful calls.
+    - Backend API (container: Java + Spring Boot): The central application handling business logic, user management, events, and recommendations. It orchestrates requests between the Mobile Client, databases, and external services.
+
   - Data Stores
+    - User DB (container: PostgreSQL): Stores user profiles, challenges joined, follower lists, and privacy settings.
+    - Activity DB (container: PostgreSQL + PostGIS Extension): Dedicated to storing hiking activities and the required geospatial data (route, media) for each.
+    - Challenges DB (container: PostgreSQL): Stores challenge descriptions, deadlines, and completion criteria.
+
+
   - External Services (Microservices / Third-Party APIs)
-- **Component Diagram (C3 – Backend API Decomposition)**
+    - Notification Service (container: Firebase/AWS SNS): Sends push notifications to user devices, receiving requests from the Backend API and returning coordinates for map visualizations.
+    - Location Service (container: Mapbox API): Provides geolocation, maps, and navigation, used for map visualization and routing by the Mobile Client and Backend API.
+    - Recommendation Engine (3rd party / Microservice): Provides personalized route suggestions using collaborative filtering, relying on user data and preferences.
+    - Authentication Service (3rd party / Microservice): Manages secure login and identity, requested by the Mobile Client.
+
+#### **Components Diagram (C3)**
+The Component diagram details the internal structure of the Backend API, demonstrating a clear Layered Architecture (Controllers, Services, Repositories) and the decomposition into functional components (e.g., User, Activity, Challenge).
+
+![C3.jpg](./img/C3.jpg)
+
   - Layered Architecture  
-    - Controllers Layer  
-    - Services Layer  
-    - Repositories Layer  
-    - Utilities Layer  
-  - External Service Clients
-- **Code Diagram (C4 – Activity Service Example)**
+    - Controllers Layer (Top): Exposes the API endpoints. Components include UserController, ActivityController, ChallengeController, NotificationController, and RecommendationController.
+
+    - Services Layer (Middle): Contains the core business logic. Components include UserService, ActivityService, ChallengeService, NotificationService, and RecommendationService. These services use Repositories for data access and clients for external communication.
+
+    - Repositories Layer (Bottom Left): Handles persistence logic and database interaction. Components like UserRepository, ActivityRepository, and ChallengeRepository abstract the database technology (PostgreSQL).
+
+    - Utilities Layer (Bottom Right): Contains cross-cutting concerns like DTOs & Mappers (data transformation), ExceptionHandler (error handling), and Logging & Monitoring.
+
+  - External Service Clients (Bottom Center): The Services layer interacts with dedicated clients to access external systems, promoting separation of concerns:
+    - AuthClient (Authentication Service - Google/Auth)
+    - MapClient (Location Service - Mapbox API)
+    - NotificationClient (Notification Service - Firebase/AWS SNS)
+    - RecommendationClient (Recommendation Engine API)
+
+#### **Code Diagram (C4 – Activity Service Example)**
+
+The Code diagram provides a detailed view of a specific component, the Activity Service, showing its classes and implementation details. This demonstrates the adopted Domain-Driven Design (DDD) principles and persistence framework (Spring/JPA).
+
+![C4.png](./img/C4.png)
+
+
   - Key Classes and Artifacts
-  - Technical Dependencies
+    - ActivityController (Methods): Shows the public API methods (e.g., @GetMapping and @PostMapping annotations) like getActivityById, submitActivity, and getAllActivities, which are the entry points for client requests.
+    - ActivityService Class (Methods): Implements the business logic (e.g., getActivities, submitActivity, deleteActivity). This layer orchestrates the operation, using the repository and mapping data.
+    - ActivityRepository Interface (Methods): A Spring Data JPA repository providing CRUD and query methods (e.g., findByUserId, save), abstracting the database interaction.
+    - Entity Fields: Shows the ActivityEntity class, which represents the persistent data model (e.g., private String title, private Point geojson). It uses JPA annotations (e.g., @Entity, @Id) for object-relational mapping.
+    - DTOs (Data Transfer Objects): Shows the data structures used for data transfer between the service/controller layer and the client (e.g., ActivityDTO, ActivitySummaryDTO), promoting encapsulation and decoupled data contracts.
+
+  - Technical Dependencies: The diagram also highlights key technical dependencies used for the implementation, such as:
+    - JPA Library (Hibernate): For Object-Relational Mapping (ORM).
+    - Spring-Boot: The framework provides dependency injection, transaction management, and simplified setup.
+    - JTS Geometry Processing: Libraries used for handling and processing geospatial data (the PostGIS Extension support).
 
 ---
 
-### 3. Sequence Diagrams
+### 2. Sequence Diagrams
 
-#### 3.1 Scenario A — Create Hike  
-#### 3.2 Scenario B — View “My Hikes”  
-#### 3.3 Scenario C — View “Friends’ Hikes”  
-#### 3.4 Scenario D — Join Challenge  
-#### 3.5 Scenario E — Create Challenge  
-#### 3.6 Scenario F — View Statistics  
+#### 2.1 Scenario A — Create Hike  
+#### 2.2 Scenario B — View “My Hikes”  
+#### 2.3 Scenario C — View “Friends’ Hikes”  
+#### 2.4 Scenario D — Join Challenge  
+#### 2.5 Scenario E — Create Challenge  
+#### 2.6 Scenario F — View Statistics  
 
 ---
 
-### 4. Elaboration of Specific Architectural Decisions and Alternatives
+### 3. Elaboration of Specific Architectural Decisions and Alternatives
 
-#### 4.1 Tech Stack
+#### 3.1 Tech Stack
 
-#### 4.2 Architecture Styles
+#### 3.2 Architecture Styles
 - Monolith vs Microservice vs Modular Monolith  
 - Separation of Concerns (SoC) Principle  
 
-#### 4.3 Quality Assurance
+#### 3.3 Quality Assurance
 - Unit Testing  
 - CI/CD Pipeline  
 - Manual Testing  
 - Postman API Testing  
 - Stress and Load Testing  
 
-#### 4.4 Paginated vs. Bulk HTTP API Responses
+#### 3.4 Paginated vs. Bulk HTTP API Responses
 - Comparison of API Design Approaches  
 - Performance Setup and Load Test Scenarios  
 - Anticipated vs Actual Results  
 
 ---
 
-### 5. Assessment of impact of Cloud vs On-Premises Deployment
+### 4. Assessment of impact of Cloud vs On-Premises Deployment
 
-#### 5.1 PostgreSQL Deployment Evaluation
+#### 4.1 PostgreSQL Deployment Evaluation
 
-#### 5.2 Mapbox Deployment Evaluation
+#### 4.2 Mapbox Deployment Evaluation
 
 ---
 
-### 6. Critical Selection of Open Source Components
+### 5. Critical Selection of Open Source Components
 - Spring Boot  
 - Lombok  
 - PostgreSQL + PostGIS  
@@ -466,29 +527,71 @@ The choice of pricing model directly affects the design and scalability of the s
 
 ---
 
-### 7. Event Communication Pattern Decision
+### 6. Event Communication Pattern Decision
 
-#### 7.1 Alternatives Considered
+For the Hikerz hiking activity tracking application, we evaluated 5 event communication patterns to enable decoupled interaction between our bounded contexts (Hike, User, Challenge, and Photo): 
+
+#### 6.1 Alternatives Considered
+
 - Publish–Subscribe (Redis Pub/Sub)  
 - Producer–Consumer (Redis Streams)  
 - Event Bus within Modular Monolith  
 - Direct HTTP/REST API Calls  
 - Shared Database with Polling  
 
-#### 7.2 Comparative Analysis  
+#### 6.2 Comparative Analysis
 
-#### 7.3 Selected Pattern: Redis Publish–Subscribe
+- Option 1: Publish-Subscribe with Redis Pub/Sub provides true decoupling where publishers emit events (e.g., HikeLogged, PhotoUploaded) to Redis channels without the knowledge of subscribers. This pattern excels at low-latency message delivery and enables asynchronous processing, which is critical when a single hike completion triggers updates across User statistics, Challenge leaderboards, and Photo galleries. Redis's in-memory architecture ensures minimal latency for event propagation - ideal for real-time leaderboard updates during peak hiking hours. However, Redis Pub/Sub operates on a "fire-and-forget" model without message persistence; if a subscriber is temporarily down when HikeLogged is published, that event is lost. This requires implementing event sourcing or storing events in the database before publishing to ensure critical user statistics aren't missed. Additionally, Redis lacks advanced features like message routing, topic patterns require careful channel naming conventions, and debugging event flows requires Redis monitoring tools.
+
+- Option 2: Producer-Consumer Queue (Redis Streams or RabbitMQ) uses a work queue where the Hike context produces events that are consumed by competing workers. Unlike pub/sub's broadcast model, each HikeLogged event is delivered to exactly one consumer from a pool, enabling horizontal scaling of event processing. This pattern excels when we need guaranteed delivery with acknowledgment—if Challenge context fails to update a leaderboard, the message remains in the queue for retry. Redis Streams offers consumer groups, message persistence with configurable retention, and processing acknowledgments while maintaining Redis's operational simplicity. However, the producer-consumer model is fundamentally mismatched to Hikerz's needs: we require multiple independent contexts to react to the same hike event simultaneously (User needs to update statistics, Challenge needs to recalculate rankings, and Photo context needs to process attached images). With a queue, we would need complex message fanout logic or duplicate events to multiple queues—negating the pattern's simplicity advantage. Additionally, competitive consumers create ordering issues when processing related events (e.g., HikeStarted, HikePaused, HikeFinished for the same hike).
+
+- Option 3: Event Bus within Modular Monolith (using Spring's ApplicationEventPublisher) offers similar decoupling benefits within a single deployment unit. When a hiker logs a route, the Hike context publishes a HikeLogged event that User context (for statistics updates) and Challenge context (for leaderboard calculations) consume in-process. This maintains clean boundaries between contexts while avoiding external infrastructure dependencies. Trade-offs include limited scalability - all contexts share compute resources, so high photo upload volumes could impact hike logging performance. Additionally, this pattern locks us into a monolithic deployment model initially, though contexts can be extracted to microservices later if needed. Unlike Redis, this guarantees event delivery within the process but cannot distribute load across multiple service instances.
+
+- Option 4: Direct HTTP/REST API Calls creates tight coupling where the Hike context directly invokes User and Challenge APIs after logging activities. This provides immediate consistency and simplifies debugging through synchronous call traces. However, it violates our domain-driven design principles by creating compile-time and runtime dependencies between contexts. A failure in the Challenge service could prevent hike logging entirely, and adding new event consumers (e.g., a future Analytics context) requires modifying the Hike context's code - contradicting the Open-Closed Principle and making our system brittle as it grows.
+
+- Option 5: Shared Database with Polling involves contexts periodically querying a shared events table for new entries. While simple to implement initially, this pattern introduces several critical problems for Hikerz: polling intervals create unacceptable latency (users expect near-instant profile updates after hike completion), the shared database violates bounded context autonomy and creates coupling through schema dependencies, and high-frequency polling under load (hundreds of concurrent hikers) causes database contention that degrades overall system performance - particularly problematic during peak weekend hiking hours.
+
+| **Criteria**               | **Pub/Sub (Redis)**             | **Producer-Consumer (Redis Streams)** | **Event Bus (Monolith)**       | **Direct HTTP/REST**            | **Shared DB Polling**          |
+|-----------------------------|----------------------------------|--------------------------------------|--------------------------------|----------------------------------|--------------------------------|
+| **Communication Model**     | One-to-many broadcast           | One-to-one (competing consumers)     | One-to-many in-process          | Synchronous point-to-point       | Pull-based polling             |
+| **Decoupling**              | True decoupling                 | True decoupling                      | In-process only                 | Tight coupling                   | Schema coupling                |
+| **Message Persistence**     | Fire-and-forget                 | Configurable retention               | Guaranteed in JVM               | No persistence                   | Database stored                |
+| **Delivery Guarantee**      | At-most-once                    | At-least-once with ACK               | Within process                  | Depends on retry logic           | Eventually consistent          |
+| **Latency**                 | Sub-millisecond                 | Low (ms range)                       | Lowest (in-memory)              | Synchronous blocking             | High (polling intervals)       |
+| **Scalability**             | Horizontal subscribers          | Horizontal consumers                 | Monolith constraints            | Limited by sync chains           | Database contention            |
+| **Infrastructure Complexity** | Requires Redis               | Requires Redis/RabbitMQ              | None (in-process)               | None (HTTP only)                 | Database only                  |
+| **Operational Overhead**    | Medium (Redis cluster)          | Medium-High (broker mgmt)            | Low                             | Low                              | Low                            |
+| **Debugging Complexity**    | Requires monitoring tools       | Message tracing needed               | Standard IDE tools              | HTTP tracing                     | Query logs                     |
+| **Message Ordering**        | No guarantees                   | Per consumer group                   | In-process order                | Sequential calls                 | Polling order                  |
+| **Failure Handling**        | Lost if subscriber down         | Retry with DLQ                       | In-process exception             | Manual retry logic               | Duplicate processing risk      |
+| **One-to-Many Support**     | Native broadcast                | Requires fanout/duplication          | Native @EventListener            | Multiple API calls               | Multiple pollers               |
+| **Privacy Control**         | Channel-based filtering         | Consumer-side filtering              | Listener filtering               | Caller must know rules           | Query-based filtering          |
+| **Offline Burst Handling**  | Async fire-and-forget           | Queue buffering                      | Shared resources                 | Blocking responses               | Polling lag                    |
+| **Future Microservices**    | Already distributed             | Already distributed                  | Requires migration               | Service mesh needed              | Requires redesign              |
+| **Best Fit for Hikerz**     | **HIGH – Real-time updates**    | **LOW – One-to-one mismatch**        | **MEDIUM – POC only**           | **LOW – Blocks users**           | **LOW – Poor performance**     |
+
+
+
+#### 6.3 Selected Pattern: Redis Publish–Subscribe
+We selected the Publish-Subscribe pattern with Redis Pub/Sub as our preferred solution for three problem-specific reasons tied to Hikerz's domain:
+- Low-latency real-time updates: Hikers expect immediate feedback when logging activities—seeing their statistics update and challenge progress increment within seconds. Redis's in-memory pub/sub delivers sub-millisecond message propagation, ensuring User and Challenge contexts process HikeLogged events nearly instantaneously. This responsiveness is critical for our gamification strategy where users compete on leaderboards during group hikes.
+- Simple operational model for POC validation: Unlike RabbitMQ or Kafka which require separate cluster management, Redis is already part of our technology stack for caching user sessions and activity feeds. Leveraging Redis Pub/Sub eliminates additional infrastructure complexity during our proof-of-concept phase, allowing our small team to validate the event-driven architecture without dedicating resources to message broker administration.
+- Privacy-driven selective event propagation: Hikers can mark activities as private, requiring complex filtering logic (PrivateHikeCannotBeShared policy). With Redis Pub/Sub, we implement privacy checks once in the Hike context publisher before emitting events to specific channels (e.g., hike.logged.public vs hike.logged.private), whereas polling or direct calls would require duplicate privacy validation in every consumer context, creating security vulnerabilities.
+
+To address Redis Pub/Sub's lack of message persistence, we implement a dual-write pattern: the Hike context persists HikeLogged events to PostgreSQL in an event sourcing table within the same transaction as the activity record, then publishes to Redis. Consumer contexts (User, Challenge, Photo) process events from Redis in real-time but can rebuild their state by replaying events from PostgreSQL on startup or after failures. This hybrid approach provides Redis's sub-millisecond delivery for the 99% case (active subscribers) while ensuring critical achievements and statistics aren't lost if a service restarts during event processing.
+While the Event Bus within Modular Monolith (Option 3) offers the simplest starting point with guaranteed delivery and no external dependencies, Redis Pub/Sub positions Hikerz to scale horizontally by running multiple instances of Challenge context subscribers during peak hiking periods, distributing leaderboard calculation load without full service extraction - essential for handling our target scenario of hundreds of mountaineers completing summit challenges simultaneously on popular weekend mornings. The operational overhead of managing Redis is acceptable given we already use it for caching user sessions and activity feed data, making pub/sub a natural extension of existing infrastructure rather than an additional moving part.
+
 
 ---
 
-### 8. Proof of Concept Discussion
+### 7. Proof of Concept Discussion
 - Demonstration of Feasibility  
 - Validation of Critical Design Choices  
 - Impact Assessment and Metrics  
 
 ---
 
-### 9. Completion of Problem Analysis
+### 8. Completion of Problem Analysis
 
 
 ---
