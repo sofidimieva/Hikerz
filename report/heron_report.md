@@ -526,23 +526,109 @@ The Code diagram provides a detailed view of a specific component, the Activity 
 #### 3.1 Tech Stack
 
 #### 3.2 Architecture Styles
-
-- Monolith vs Microservice vs Modular Monolith
+- Monolith vs Microservice vs Modular Monolith  
 - Separation of Concerns (SoC) Principle
+  - Separation of Concerns (SoC) is a software design and engineering discipline aimed at breaking down complex systems into more manageable and understandable components. The core idea is to organize the system in such a way that each part is responsible for a single concern, or a well-defined aspect of functionality, without overlapping concerns.  By implementing SoC, a system’s **modularity**, **maintainability**, and **scalability** are significantly increased.
+  - In the **Hikerz** codebase, we adhere to this principle by ensuring clear separation between various parts of the application:
+    - **Service**: Houses the functional logic of the system.
+    - **Controller**: Serves as the point of entry for incoming requests.
+    - To ensure clean architecture and decouple the internal model from the external API representation, the results from retrieving entities from the repository are mapped to a **Data Transfer Object (DTO)**.
+    - Example of SoC in the Hikerz codebase.![SOC Example](report/img/SOC.jpg)
 
 #### 3.3 Quality Assurance
+-  Unit Tests (Backend Java Unit Tests) - Unit tests verify that individual components of the backend (e.g., services, controllers) work as expected.
+   - **Tools**:
+     - JUnit
+     - Mockito
+     - Spring Boot Test
 
-- Unit Testing
-- CI/CD Pipeline
-- Manual Testing
-- Postman API Testing
-- Stress and Load Testing
+-  CI/CD Pipeline - CI/CD automates the process of integrating code changes, building the app, running tests, and deploying to environments.
+   - **Tools**:
+     - GitLab CI
+     - EAS (Expo Application Services): Used to build the React Native app efficiently.
+
+- Manual Testing  - Manual testing involves human interaction with the application to identify issues that automated tests may miss. This includes usability and edge-case testing.
+- Postman API Testing - Postman is used for testing and validating RESTful APIs. It helps ensure the backend API endpoints are functioning correctly, with the right responses and status codes.
+- Stress/Load Testing
+    - **Tools**: k6
+    - **Purpose**: Ensure the system remains stable under high usage and can scale when necessary.
 
 #### 3.4 Paginated vs. Bulk HTTP API Responses
+In designing the HTTP API for our microservices, a critical architectural decision was made regarding how to retrieve collections of data: **Paginated Responses** versus **Bulk Fetching** (non-paginated). For the Proof of Concept (POC), we will use the user retrieval endpoint, `/all/{username}`, to assess the performance implications of each approach.
 
 - Comparison of API Design Approaches
-- Performance Setup and Load Test Scenarios
-- Anticipated vs Actual Results
+  - Paginated Responses (Chosen for Scale) - The paginated approach retrieves data in smaller, manageable chunks called pages, which drastically improves performance and resource management when dealing with large datasets. Our standard configuration fetches 10 objects per page.
+    - **Endpoint (POC)**: 
+      - `@GetMapping("/all/{username}")` - Fetches users page by page.  
+      - **Request Params**:
+        - `page` (default 0)
+        - `size` (default 10)
+        - `q` (optional search query for filtering)  
+      - **Response Format**: `PaginatedResponse<UserResponse>`
+    - **Key Benefits**:
+      - **Improved Performance**: Smaller data payloads lead to significantly faster response times and lower latency.
+      - **Resource Efficiency**: Reduced server memory usage, lower database load, and less network bandwidth consumption.
+      - **Scalability**: Allows the service to handle large datasets efficiently under load.
+
+  - Bulk Fetching (Non-Paginated) Responses - The bulk fetching approach retrieves the entire collection of data in a single HTTP response.
+      - **Endpoint (POC)**:  
+        - `@GetMapping("/all/notPaginated/{username}")` - Fetches all users matching the criteria in a single response.  
+        - **Request Params**:
+          - `q` (optional search query for filtering)  
+        - **Response Format**: `List<UserResponse>`
+      - **Key Risks**:
+        - **Performance Bottleneck**: A single request for a large dataset (1000 users in our test) can monopolize server resources and take a very long time, leading to user-facing timeouts.
+        - **Resource Exhaustion**: Increases the risk of high memory and CPU utilization on both the server and the client.
+
+  - **Note on the `q` parameter**: This optional query parameter is intended for user-driven search from the UI. When `q` is null, the endpoint attempts to fetch all users, which is the scenario where the difference between pagination and bulk fetch will be most stark.
+
+
+- Performance Setup and Load Test Scenarios  
+  - Setup
+    - To objectively measure the performance difference, we will execute a load test against both endpoints.
+    - **Microservice**: Spring Boot user microservice is running.
+    - **Dataset**: The service is populated with 1000 users.
+    - **Load Tester**: **k6** is an open-source, developer-centric load testing tool for engineering teams. It's written in Go and allows us to script complex performance scenarios using JavaScript. It measures critical metrics like throughput, response time, and error rate under high concurrency.
+    - **Visualization**: We will use **Grafana** for real-time visualization, allowing for a direct, graphical comparison of the performance characteristics (latency, throughput, resource usage) of the two endpoints.
+  - Load Test Scenario
+    - We will use a gradual ramp-up scenario to observe the microservice's behavior as the load intensifies, pushing both endpoints to their limits.
+    - The scenario defines the number of concurrent Virtual Users (target) over a specified duration:
+    
+    | Stage | Duration | Target (Virtual Users) | Cumulative Time | Notes |
+    |-------|----------|------------------------|-----------------|-------|
+    | 0     | 15s      | 50                     | 0:15            | Initial ramp-up |
+    | 1     | 30s      | 50                     | 0:45            | Steady load |
+    | 2     | 15s      | 100                    | 1:00            | Increase load |
+    | 3     | 30s      | 100                    | 1:30            | Steady load |
+    | 4     | 15s      | 200                    | 1:45            | Significant increase |
+    | 5     | 30s      | 200                    | 2:15            | Steady load |
+    | 6     | 15s      | 400                    | 2:30            | Stress begins |
+    | 7     | 30s      | 400                    | 3:00            | Steady stress |
+    | 8     | 15s      | 800                    | 3:15            | High stress |
+    | 9     | 30s      | 800                    | 3:45            | Steady high stress |
+    | 10    | 15s      | 1000                   | 4:00            | Maximum stress |
+    | 11    | 30s      | 1000                   | 4:30            | Final maximum load |
+
+  - Anticipated vs Actual Results  
+      - Anticipated results - The visualization in Grafana is expected to demonstrate the superior performance of the paginated approach.
+    
+      | Metric                | Paginated Endpoint   | Bulk Fetch Endpoint   |
+      |-----------------------|----------------------|-----------------------|
+      | **Latency (p95 Response Time)** | Low and stable across all load stages. | Will spike sharply under medium-to-high load (Stage 4+), leading to potential timeouts. |
+      | **Throughput (Requests/s)** | High and sustained, processing many requests per second. | Will drop significantly, limited by the long processing time of each large request. |
+      | **Error Rate** | Near 0%. | Will likely show a high percentage of timeouts or server errors at higher loads. |
+
+      - Actual Test Results 
+        - As described in [this article](https://odown.com/blog/what-is-a-good-api-response-time/) and shown in the figures below the paginated API response time with concurrent users is still within the expected parameters.
+        - In contrast, as illustrated in the figures, the bulk API begins to time out with 1000 concurrent API calls, highlighting the performance drawbacks of the non-paginated approach. Meanwhile, the paginated API continues to process requests efficiently, with its latency response to each request at most 2 seconds, 95% lower than the 60-second timeout the bulk API experiences.
+        - The results validate the architectural decision to implement pagination as the standard for data retrieval endpoints that handle potentially large collections, ensuring the microservice remains performant and resilient under high concurrency.
+            
+          - | Metric                | Paginated                                                                 | Non Paginated                                                               |
+            |-----------------------|---------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+            | Http Performance      | ![Http Performance Pag](report/img/pag-experiment/pag-http-performance.png)| ![Http Performance Non Pag](report/img/pag-experiment/non-pag-http-performance.png)                      |
+            | Http Request Duration | ![Http Request Duration Pag](report/img/pag-experiment/http-req-dur-pag.png)   | ![Http Request Duration Non Pag](report/img/pag-experiment/http-req-dur-non-pag.png) |
+            | VU Number             | ![VU Number Pag](report/img/pag-experiment/vu-pag.png)                     | ![VU Number Non Pag](report/img/pag-experiment/vu-non-pag.png)               |
+
 
 ---
 
@@ -585,11 +671,14 @@ For Hikerz, the cloud-based approach minimizes infrastructure maintenance and pr
 ---
 
 ### 5. Critical Selection of Open Source Components
-
 - Spring Boot
+  - Spring Boot is an open-source Java web framework that makes creating web apps and microservices easier. It enables programmers to create production-quality, standalone apps with little setup. Spring Boot simplifies setup by embracing an opinionated approach to the Spring platform and incorporating third-party libraries, freeing developers to concentrate on creating application logic rather than configuration. The majority of Spring Boot applications are ready to use right out of the box and require little setup.
 - Lombok
-- PostgreSQL + PostGIS
-- k6 (Load Testing Framework)
+  - Project Lombok is a robust Java library that reduces boilerplate code to increase productivity. Because of its smooth integration with your editor and build tools, developers can avoid writing repetitive code like equals, setters, and getters. Lombok can streamline development and improve code maintainability by managing logging variables, automatically generating a fully functional builder, and more with just a few simple annotations.
+- PostgreSQL
+  - PostgreSQL is a powerful open-source relational database system that is well-known for its extensibility, high standards compliance, and sophisticated features—all without the cost of licensing. Developers looking for a dependable and scalable database solution choose it because of its broad support for data types and strong querying features.  The PostGIS extension is one of PostgreSQL's most notable features for the Hikerz project. The app's map-based features and geospatial analysis depend on the efficient storage, querying, and manipulation of geographic data made possible by this extension's spatial database capabilities.
+- k6 
+  - k6 is an open-source load testing tool designed for testing the performance of APIs, websites, and microservices under heavy load. It provides detailed insights into performance bottlenecks and system limits.
 
 ---
 
