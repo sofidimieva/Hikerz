@@ -29,13 +29,13 @@ public class FollowingController {
         followingService.unfollowUser(username, followUsername);
     }
 
-    @GetMapping("/{username}/followers/{followUsername}")
+    @GetMapping("/{username}/followers")
     @ResponseStatus(HttpStatus.OK)
     public FollowersResponse getFollowers(@PathVariable String username) {
         return followingService.getFollowers(username);
     }
 
-    @GetMapping("/{username}/following/{followUsername}")
+    @GetMapping("/{username}/following")
     @ResponseStatus(HttpStatus.OK)
     public FollowingResponse getFollowing(@PathVariable String username) {
         return followingService.getFollowing(username);

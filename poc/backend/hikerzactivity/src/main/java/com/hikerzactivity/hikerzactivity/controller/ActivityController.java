@@ -68,6 +68,12 @@ public class ActivityController {
                 .contentType(MediaType.IMAGE_PNG)
                 .body(png);
     }
+
+    @GetMapping("/{username}/friends-activities")
+        @ResponseStatus(HttpStatus.OK)
+        public List<ActivityResponse> getFriendsActivities(@PathVariable String username) {
+            return activityService.getFriendsActivities(username);
+    }
     
     
 }

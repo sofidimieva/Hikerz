@@ -6,6 +6,8 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.hikerzactivity.hikerzactivity.model.Activity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hikerzactivity.hikerzactivity.client.UserMicroserviceClient;
 import com.hikerzactivity.hikerzactivity.dto.ActivityRequest;
 import com.hikerzactivity.hikerzactivity.dto.ActivityResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -35,15 +38,20 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
     private final ObjectMapper objectMapper;
     private final WebClient webClient;
+        private final UserMicroserviceClient userMicroserviceClient;
+
 
     private final String mapboxToken;
     
-    public ActivityService(ActivityRepository activityRepository, @Value("${mapbox.token:${MAPBOX_TOKEN:}}") String mapboxToken) {
+    public ActivityService(ActivityRepository activityRepository, 
+            UserMicroserviceClient userMicroserviceClient,
+            @Value("${mapbox.token:${MAPBOX_TOKEN:}}") String mapboxToken) {
         this.activityRepository = activityRepository;
         this.objectMapper = new ObjectMapper();
         this.webClient = WebClient.builder().build();
+        this.userMicroserviceClient = userMicroserviceClient;
         this.mapboxToken = mapboxToken;
-    }
+        }
     public void createActivity(ActivityRequest activityrequest){
         Activity activity = Activity.builder().title(activityrequest.getTitle()).description(activityrequest.getDescription()).build();
         activityRepository.save(activity);
@@ -53,6 +61,23 @@ public class ActivityService {
     public List<ActivityResponse> getAllActivities(){
         List<Activity> activities = activityRepository.findAll(); 
         return activities.stream().map(activity -> mapToActivityResponse(activity)).toList();
+    }
+
+    public List<ActivityResponse> getFriendsActivities(String username) {
+        // Get the list of usernames that this user follows from the user microservice
+        List<String> followedUsernames = userMicroserviceClient.getFollowing(username);
+        
+        // If the user doesn't follow anyone, return an empty list
+        if (followedUsernames == null || followedUsernames.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Get all activities for the followed users in one query (more efficient)
+        List<Activity> activities = activityRepository.findByUsernameInOrderByDateDesc(followedUsernames);
+        
+        return activities.stream()
+                .map(this::mapToActivityResponse)
+                .toList();
     }
 
     public String getHikeAsGeoJson(Long id) {
