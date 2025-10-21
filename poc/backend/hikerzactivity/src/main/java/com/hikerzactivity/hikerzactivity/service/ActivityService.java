@@ -63,16 +63,20 @@ public class ActivityService {
         return activities.stream().map(activity -> mapToActivityResponse(activity)).toList();
     }
 
+    public List<ActivityResponse> getAllActivitiesOfUser(String username) {
+        List<Activity> activities = activityRepository.findByUserId(username);
+        return activities.stream()
+            .map(this::mapToActivityResponse)
+            .toList();
+    }
+
     public List<ActivityResponse> getFriendsActivities(String username) {
-        // Get the list of usernames that this user follows from the user microservice
-        List<String> followedUsernames = userMicroserviceClient.getFollowing(username);
-        
-        // If the user doesn't follow anyone, return an empty list
+        var followedUsernames = userMicroserviceClient.getFollowing(username);
+         System.out.println("Followed usernames: " + followedUsernames);
         if (followedUsernames == null || followedUsernames.isEmpty()) {
             return new ArrayList<>();
         }
         
-        // Get all activities for the followed users in one query (more efficient)
         List<Activity> activities = activityRepository.findByUsernameInOrderByDateDesc(followedUsernames);
         
         return activities.stream()

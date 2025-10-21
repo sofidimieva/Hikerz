@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.LineString;
+import java.time.LocalDateTime;
+import jakarta.persistence.PrePersist;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -29,4 +31,14 @@ public class Activity {
     @JdbcTypeCode(SqlTypes.GEOMETRY)
     private LineString route;
 
+    @Column(name = "user_id", nullable = false)
+    private String userId;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 }

@@ -15,11 +15,19 @@ public interface ActivityRepository extends CustomRepository<Activity, Long>{
     """, nativeQuery = true)
     String findGeomGeoJsonById(@Param("id") Long id);
 
+    @Query("""
+        SELECT a
+        FROM Activity a
+        WHERE a.userId = :userId
+    """)
+    List<Activity> findByUserId(@Param("userId") String userId);
+
+
     @Query(value = """
         SELECT a
         FROM Activity a
-        WHERE a.username IN :usernames
-        ORDER BY a.date DESC
+        WHERE a.userId IN :usernames
+        ORDER BY a.createdAt DESC
     """)
     List<Activity> findByUsernameInOrderByDateDesc(@Param("usernames") List<String> usernames);
 }

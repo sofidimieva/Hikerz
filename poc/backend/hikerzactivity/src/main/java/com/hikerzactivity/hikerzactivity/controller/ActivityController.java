@@ -75,5 +75,10 @@ public class ActivityController {
             return activityService.getFriendsActivities(username);
     }
     
+    @GetMapping("/user/{username}")
+    @ResponseStatus(HttpStatus.OK)
+    public List<ActivityResponse> getAllActivitiesOfUser(@PathVariable String username) {
+        return activityService.getAllActivitiesOfUser(username);
+    }
     
 }
