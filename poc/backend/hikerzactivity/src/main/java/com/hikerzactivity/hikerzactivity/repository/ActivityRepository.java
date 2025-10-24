@@ -4,6 +4,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.hikerzactivity.hikerzactivity.CustomRepository;
 import com.hikerzactivity.hikerzactivity.model.Activity;
+import java.util.List;
 
 public interface ActivityRepository extends CustomRepository<Activity, Long>{
 
@@ -14,4 +15,19 @@ public interface ActivityRepository extends CustomRepository<Activity, Long>{
     """, nativeQuery = true)
     String findGeomGeoJsonById(@Param("id") Long id);
 
+    @Query("""
+        SELECT a
+        FROM Activity a
+        WHERE a.userId = :userId
+    """)
+    List<Activity> findByUserId(@Param("userId") String userId);
+
+
+    @Query(value = """
+        SELECT a
+        FROM Activity a
+        WHERE a.userId IN :usernames
+        ORDER BY a.createdAt DESC
+    """)
+    List<Activity> findByUsernameInOrderByDateDesc(@Param("usernames") List<String> usernames);
 }

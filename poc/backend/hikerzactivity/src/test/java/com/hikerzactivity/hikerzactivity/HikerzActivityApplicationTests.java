@@ -3,11 +3,11 @@ package com.hikerzactivity.hikerzactivity;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest(classes = HikerzActivityApplication.class)
-class HikerzUserApplicationTests {
+@SpringBootTest
+class HikerzActivityApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    void contextLoads() {
+    }
 
 }
