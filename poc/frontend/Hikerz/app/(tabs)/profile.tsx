@@ -14,7 +14,7 @@ type ProfileScreenProps = {
 
 export default function ProfileScreen({ route }: ProfileScreenProps) {
 
-  const username = route?.params?.username ?? 'filipcirtog';
+  const username = route?.params?.username ?? 'user0';
 
   const [user, setUser] = useState<User | null>(null);
   const [pending, setPending] = useState(true);

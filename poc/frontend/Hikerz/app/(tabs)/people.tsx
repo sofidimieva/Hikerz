@@ -56,7 +56,7 @@ function StandardAvatarGroup({ children }: { children: React.ReactNode }) {
 }
 
 const PAGE_SIZE = 10;
-const username = 'filipcirtog'; 
+const username = 'user0'; 
 export default function DiscoverScreen() {
   const [items, setItems] = useState<User[]>([]);
   const [page, setPage] = useState(0);
