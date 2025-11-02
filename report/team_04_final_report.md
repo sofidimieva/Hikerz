@@ -2,7 +2,7 @@ Hikerz: A Social Hiking Network
 
 Team 4:
 Polly Dimieva
-Sofi Dimieva
+Sofia Dimieva
 Filip-Andrei Cirtog
 Bogdan-Luca Paramon
 
