@@ -3,8 +3,8 @@ Hikerz: A Social Hiking Network
 Team 4:
 Polly Dimieva
 Sofi Dimieva
-Cirtog Filip-Andrei
-Paramon-Luca Bogdan
+Filip-Andrei Cirtog
+Bogdan-Luca Paramon
 
 ### Table of Contents
 
@@ -87,6 +87,7 @@ Paramon-Luca Bogdan
 
 ## 1. Problem Statement and Motivation
 
+---
 ## 2 Problem analysis
 
 ### 2.1. Stakeholders and Context (Interest Map)
@@ -109,6 +110,7 @@ Paramon-Luca Bogdan
 
 ### 2.4. Creation of Wardley Maps for Hikerz: From Genesis to Commodity
 
+---
 ## 3. Event Storming Process
 
 ### 3.1. Participants
@@ -139,6 +141,7 @@ Paramon-Luca Bogdan
 
 ### 3.9. Cross-Context Dependencies
 
+---
 ## 4. Pricing Models and Architectural Implications
 
 ### 4.1 Types of Pricing Models
@@ -165,6 +168,7 @@ Paramon-Luca Bogdan
 
 ### 4.3. Conclusion
 
+---
 ## 5. Architecture Development and Design Decisions
 
 ### 5.1. C4 Model
@@ -191,6 +195,7 @@ Paramon-Luca Bogdan
 
 ### 5.3 Proof-of-Concept Validation
 
+---
 ## 6. Elaboration of Specific Architectural Decisions and Alternatives
 
 #### 6.1 Tech Stack
@@ -203,6 +208,7 @@ Paramon-Luca Bogdan
 
 #### 6.5 Paginated vs. Bulk HTTP API Responses
 
+---
 ## 7. Assessment of impact of Cloud vs On-Premises Deployment
 
 #### 7.1 PostgreSQL
@@ -217,8 +223,10 @@ Paramon-Luca Bogdan
 
 ##### 7.2.4 Cloud vs On Premises:
 
+---
 ## 8. Critical Selection of Open Source Components
 
+---
 ## 9. Event Communication Pattern
 
 ### 9.1 Alternatives Considered
@@ -227,6 +235,7 @@ Paramon-Luca Bogdan
 
 ### 9.3 Selected Pattern: Redis Publish–Subscribe
 
+---
 ## 10. Proof of concept
 
 ### 10.1 Structure 
@@ -235,4 +244,5 @@ Paramon-Luca Bogdan
 
 ### 10.3 Results
 
+---
 ## References
