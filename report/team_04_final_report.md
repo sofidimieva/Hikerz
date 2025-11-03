@@ -19,16 +19,22 @@ Bogdan-Luca Paramon
     - [2.3.2. Quality Attributes](#232-quality-attributes)
     - [2.3.3. Trade-offs](#233-trade-offs)
   - [2.4. Creation of Wardley Maps for Hikerz: From Genesis to Commodity](#24-creation-of-wardley-maps-for-hikerz-from-genesis-to-commodity)
-    - [2.4.1. Introduction to Wardley Maps](#241-introduction-to-wardley-maps)
-    - [2.4.2. Wardley Maps Analysis](#242-wardley-maps-analysis)
+    - [2.4.1 Introduction to Wardley Maps](#241-introduction-to-wardley-maps)
+    - [2.4.2 Wardley Maps Analysis](#242-wardley-maps-analysis)
 - [3. Event Storming Process](#3-event-storming-process)
-  - [3.1. Steps](#34-steps)
-  - [3.2. Event-to-Aggregate Mapping](#35-event-to-aggregate-mapping)
-  - [3.3. Outputs from Event Storming](#36-outputs-from-event-storming)
-  - [3.4. Cross-Context Dependencies](#39-cross-context-dependencies)
+  - [3.1. Steps](#31-steps)
+  - [3.2. Event-to-Aggregate Mapping](#32-event-to-aggregate-mapping)
+  - [3.3. Outputs from Event Storming](#33-outputs-from-event-storming)
+  - [3.4. Cross-Context Dependencies](#34-cross-context-dependencies)
+    - [3.4.1 Hike Context → User Context (`HikeLogged`)](#341-hike-context--user-context-hikelogged)
+    - [3.4.2. Hike Context → Photo Context (`PhotoUploaded`)](#342-hike-context--photo-context-photouploaded)
+    - [3.4.3 Photo Context → Hike Context (`PhotoUploaded`)](#343-photo-context--hike-context-photouploaded)
+    - [3.4.4. Photo Context → User Context (`PhotoUploaded`)](#344-photo-context--user-context-photouploaded)
+    - [3.4.5. User Context → User Context (`FriendAdded`, `FriendRemoved`, `FriendMapViewed`)](#345-user-context--user-context-friendadded-friendremoved-friendmapviewed)
+    - [3.4.6. User Context → Challenge Context (`ChallengeJoined`, `ChallengeCompleted`)](#346-user-context--challenge-context-challengejoined-challengecompleted)
 - [4. Pricing Models and Architectural Implications](#4-pricing-models-and-architectural-implications)
   - [4.1 Types of Pricing Models](#41-types-of-pricing-models)
-    - [4.1.1. Subscription-Based Pricing](#411-subscription-based-pricing)
+    - [4.1.1 Subscription-Based Pricing](#411-subscription-based-pricing)
     - [4.1.2. Pay-Per-Use Pricing](#412-pay-per-use-pricing)
     - [4.1.3. Freemium Pricing](#413-freemium-pricing)
     - [4.1.4. Tiered Pricing](#414-tiered-pricing)
@@ -56,6 +62,7 @@ Bogdan-Luca Paramon
 - [6. Elaboration of Specific Architectural Decisions and Alternatives](#6-elaboration-of-specific-architectural-decisions-and-alternatives)
     - [6.1 Tech Stack](#61-tech-stack)
     - [6.2 Architecture Styles](#62-architecture-styles)
+      - [6.2.1 Microservices](#621-microservices)
     - [6.3  Separation of Concerns (SoC) Principle](#63--separation-of-concerns-soc-principle)
     - [6.4 Quality Assurance](#64-quality-assurance)
     - [6.5 RESTful HTTP APIs Response](#65-restful-http-apis-response)
@@ -70,34 +77,74 @@ Bogdan-Luca Paramon
       - [7.2.4 Cloud vs On Premises:](#724-cloud-vs-on-premises)
 - [8. Critical Selection of Open Source Components](#8-critical-selection-of-open-source-components)
 - [9. Event Communication Pattern](#9-event-communication-pattern)
-  - [9.1 Comparative Analysis](#92-comparative-analysis)
-  - [9.2 Selected Pattern: Redis Publish–Subscribe](#93-selected-pattern-redis-publishsubscribe)
+  - [9.1 Comparative Analysis](#91-comparative-analysis)
+    - [9.1.1. Publish-Subscribe with Redis Pub/Sub](#911-publish-subscribe-with-redis-pubsub)
+    - [9.1.2. Producer-Consumer Queue (Redis Streams or RabbitMQ)](#912-producer-consumer-queue-redis-streams-or-rabbitmq)
+    - [9.1.3 Event Bus within Modular Monolith (using Spring's ApplicationEventPublisher)](#913-event-bus-within-modular-monolith-using-springs-applicationeventpublisher)
+    - [9.1.4, Direct HTTP/REST API Calls](#914-direct-httprest-api-calls)
+    - [9.1.5. Shared Database with Polling](#915-shared-database-with-polling)
+  - [9.2 Selected Pattern: Redis Publish–Subscribe](#92-selected-pattern-redis-publishsubscribe)
+    - [9.2.1. Low-latency real-time updates](#921-low-latency-real-time-updates)
+    - [9.2.2. Simple operational model for POC validation](#922-simple-operational-model-for-poc-validation)
+    - [9.2.3. Privacy-driven selective event propagation](#923-privacy-driven-selective-event-propagation)
 - [10. Proof of concept](#10-proof-of-concept)
   - [10.1 Structure](#101-structure)
   - [10.2. Experiment](#102-experiment)
     - [10.2.1. Performance Setup and Load Test Scenarios](#1021-performance-setup-and-load-test-scenarios)
     - [10.2.2. Metrics Considered](#1022-metrics-considered)
-    - [10.2.3. Expected results](#1023-expected-results)
+    - [10.2.3. Metrics Considered \& Expected results](#1023-metrics-considered--expected-results)
   - [10.3 Results](#103-results)
+  - [10.4 Remaining risks and plans for future design iterations.](#104-remaining-risks-and-plans-for-future-design-iterations)
 - [11. Use of Artificial Intelligence](#11-use-of-artificial-intelligence)
 - [References](#references)
 
 
 ## 1. Problem Statement and Motivation
 
+We propose a new outdoor hiking app named Hikerz which will record hiking routes on mobile applications. While currenttly similar platforms exist (like Strava or Komot), they only provide a series of features for activity tracking, mainly focused on running, cycling and swimming. Therefore, these platforms present the following three shortcomings:
+
+1. Limited mountaineering focus in existing platforms: Current fitness and activity apps offering minimal support for mountaineering specific goals and instead focus on runners and cyclists.
+2. Insufficient gamification and progression systems: Existing platforms focus on metrics rather than social connections
+3. Lack of meaningful community engagement: Most apps fail to motivate users through structured challenges, achievement badges, or progression levels.
+
+Hikerz aspires to serve both casual hikers seeking motivation and dedicated mountaineers striving toward regional peak goals. By addressing these shortcomings, Hikerz could attract a significant number of users from existing platforms like Strava, Komoot, and others.
+
 ---
 ## 2 Problem analysis
 
 ### 2.1. Stakeholders and Context (Interest Map)
+In the **keep satisfied** section, we placed community organizers such as clubs or informal groups managing private or public hiking challenges togarher with local authorities such as municipal or regional entities interested in promoting local hiking trails and ensuring safety and environmental protection.
+
+Next, we decided to **managed closely** our primary Users such as hikers, mountaineers, and outdoor enthusiasts seeking to record, share, and explore hiking routes.
+
+We will **monitor (deploy minimum effor)** for amateur sports people such as casual hikers or fitness enthusiasts exploring trails occasionally and individuals using other fitness tracking platforms who might expand their activities to include hiking.
+
+
+Lastly, we will **keep informed** individuals using the platform for educational purposes, such as geography or outdoor clubs and local business owners such as small businesses near popular trails that might benefit from exposure through the app.
 
 ![Interest Map of Hikerz application](./img/interest_map.png)  
 
 
 ### 2.2. Context analysis
+Context captures all external elements that shape the design of Hikerz: users, competitors, regulations, and technical ecosystems. This section describes some of the factors that affect the app's architecture but are not directly related to its core functionality, such as external factors and market dynamics that shape its development.
 
 #### 2.2.1 Context problems
+| **Problem** | **Description** |
+|--------------|-----------------|
+| **Connectivity in the outdoors** | Connectivity in outdoor environments is often intermittent, requiring an design so users can record hikes and access key features without a strong internet connection. |
+| **Competitive pressure** | Existing platforms like Strava and Komoot are already feature-rich, making it essential for Hikerz to differentiate itself through community-driven experiences, peak challenges, and gamification. |
+
 
 #### 2.2.2 External Risks and Dependencies
+| **Category**                    | **Description** |
+|----------------------------------|-----------------|
+| **Environmental Risks**          | As Hikerz operates in the outdoor space, it is dependent on weather and climate. |
+| **Economic Risks**               | In times of economic downturns, spending on outdoor activities may decrease. |
+| **Partnership Dependencies**     | Hikerz's ability to generate revenue from partnerships with commercial entities such as gear shops, local tourism boards, or map providers is crucial. |
+| **Regulatory and Privacy Risks** | The outdoor activity tracking space is sensitive to privacy risks, as users may expose their home or work locations, creating potential security threats. |
+| **Data Protection Regulations**  | The app must comply with data protection laws like GDPR. |
+| **Market Competition and Adoption** | User adoption is crucial for Hikerz's success. If only a few users decide to switch to the platform, it risks lacking the necessary user engagement and content generation that would make the app valuable. |
+
 
 ### 2.3. Vision articulation and identification of key functionality
 
@@ -106,7 +153,15 @@ Bogdan-Luca Paramon
 
 #### 2.3.2. Quality Attributes
 
+- **Performance:** The app will deliver fast response times up to 1000 concurrent users and easy navigation to ensure a seamless user experience.  
+- **Usability:** Hikerz will feature an intuitive and accessible interface, making it easy for users of all experience levels to explore and track their activities.  
+- **Privacy and Security:** User data will be safeguarded through strong encryption and strict adherence to privacy regulations such as GDPR.  
+
+
 #### 2.3.3. Trade-offs
+- Privacy vs. Social Sharing: Offering privacy controls (e.g., private vs. public sharing of routes, photos, and stats) can limit the potential for broader social interaction or exposure.
+- Feature Richness vs. Simplicity: Too many features could risk overwhelming casual users who just want a simple tracking app.
+- Data Storage vs. Performance: Storing photos, route details, and trail statistics requires significant storage space, which may impact device performance
 
 ### 2.4. Creation of Wardley Maps for Hikerz: From Genesis to Commodity
 
@@ -394,6 +449,15 @@ In the following sections, we make some important decisions involving the archit
 ## 6. Elaboration of Specific Architectural Decisions and Alternatives
 
 #### 6.1 Tech Stack
+Because of its extensive JVM maturity, we came to the conclusion that SpringBoot is the ideal option for enterprise backends operating at production scale. This guarantees robust stability, continuous updates/patches (due to massive adoption), and a reliable, comprehensive ecosystem. Furthermore, Spring Boot provides great Out Of The Box features and extensions that directly address the Hikerz architectural requirements. Additionally, for spatial tasks like PostGis requests, which hikers will depend on, the majority of the alternatives under consideration offer poor scalability. React Native will be used for the PoC in order to integrate with mobile devices and be able to showcase our backend design choices.
+
+| **Option** | **Advantage** | **Trade-off** |
+|-------------|----------------|----------------|
+| **Option 1 (Chosen): Spring Boot (JVM)** | Mature enterprise ecosystem (JPA, Security, Observability) and strong CPU performance for PostGIS analysis. | Higher memory use and slower startup compared to Go or Node.js. |
+| **Option 2: Python (Django)** | Fast prototyping and simple, readable syntax for quick iteration. | Limited concurrency and performance for CPU-heavy spatial tasks (PostGIS). |
+| **Option 3: Go (Gin/Chi/Fiber)** | Excellent raw performance and lightweight concurrency with goroutines. | Lacks built-in enterprise features; requires manual integration. |
+| **Option 4: Node.js (NestJS)** | Great for rapid development of I/O-bound services. | Single-threaded model limits CPU-heavy spatial scalability (PostGIS). |
+
 
 #### 6.2 Architecture Styles  
 
@@ -417,7 +481,7 @@ Quality assurance in the Hikerz project focuses on ensuring reliability, stabili
 #### 6.5 RESTful HTTP APIs Response 
 
 ##### 6.5.1. Context
-As Hikerzs’ quality attributes focus on performance and scalability, when designing the RESTful HTTP APIs for the microservices, an important architectural decision was made on how to handle the retrieval of large datasets: Paginated Responses versus Bulk Fetching (non-paginated). As explained in here response pagination should improve performance while supporting better accessibility and facilitating easier navigation and comparison.
+As Hikerzs’ quality attributes focus on performance and scalability, when designing the RESTful HTTP APIs for the microservices, an important architectural decision was made on how to handle the retrieval of large datasets: Paginated Responses versus Bulk Fetching (non-paginated). As explained by [Gowda et al.](#pagination), pagination partitions large result sets into smaller, more manageable pages. According to the [ALF Design Group](#alf-pagination-table-design), this approach not only enhances performance but also improves accessibility and enables easier navigation and comparison.
 
 
 ##### 6.5.2. Chosen API Design Approach and Alternatives
@@ -567,14 +631,14 @@ This involves contexts periodically querying a shared events table for new entri
 ### 9.2 Selected Pattern: Redis Publish–Subscribe
 Redis Pub/Sub is a lightweight and efficient messaging system that enables real-time communication between publishers and subscribers. It allows different services to exchange events asynchronously without direct dependencies. Publishers send messages to channels, and subscribers receive them instantly if they are subscribed to the corresponding channel. This makes Redis Pub/Sub ideal for distributed, event-driven systems requiring high responsiveness and minimal latency ([Redis Documentation, n.d.](#redis-doc)).
 
-### 9.2.1. Low-latency real-time updates
+#### 9.2.1. Low-latency real-time updates
 Hikerz requires immediate feedback when users log activities—such as instant updates to their statistics and challenge progress. Redis’s in-memory architecture enables sub-millisecond message propagation, ensuring that updates are visible almost instantly across User, Challenge, and Photo contexts ([Richardson, 2018](#richardson)). This near-real-time communication supports the platform’s gamified features, like leaderboards and achievement tracking, where responsiveness directly impacts user engagement.  
 
 
-### 9.2.2. Simple operational model for POC validation
+#### 9.2.2. Simple operational model for POC validation
 Unlike RabbitMQ or Kafka which require separate cluster management, Redis is already part of our technology stack for caching user sessions and activity feeds. Leveraging Redis Pub/Sub eliminates additional infrastructure complexity during our proof-of-concept phase, allowing our small team to validate the event-driven architecture without dedicating resources to message broker administration.
 
-### 9.2.3. Privacy-driven selective event propagation
+#### 9.2.3. Privacy-driven selective event propagation
  Hikers can mark activities as private, requiring complex filtering logic (PrivateHikeCannotBeShared policy). With Redis Pub/Sub, we implement privacy checks once in the Hike context publisher before emitting events to specific channels (e.g., hike.logged.public vs hike.logged.private), whereas polling or direct calls would require duplicate privacy validation in every consumer context, creating security vulnerabilities.
 
 To address Redis Pub/Sub's lack of message persistence, we implement a dual-write pattern: the Hike context persists HikeLogged events to PostgreSQL in an event sourcing table within the same transaction as the activity record, then publishes to Redis. Consumer contexts (User, Challenge, Photo) process events from Redis in real-time but can rebuild their state by replaying events from PostgreSQL on startup or after failures. This hybrid approach provides Redis's sub-millisecond delivery for the 99% case (active subscribers) while ensuring critical achievements and statistics aren't lost if a service restarts during event processing.
@@ -620,11 +684,21 @@ The scenario models a gradual ramp-up scenario to observe the microservice's beh
 | **Error Rate** | Near 0%. | Will likely show a high percentage of timeouts or server errors at higher loads. |
 | **System Load (CPU/Memory)** | Moderate and predictable. | High peaks in both CPU and Memory as the service attempts to load and serialize 1000 objects concurrently for many users. |
 
-#### 10.2.3. Expected results
-The visualization in Grafana is expected to demonstrate the superior performance of the paginated approach, with the non-paginated option starting to fail with a high number of requests sent per second. 
+#### 10.2.3. Metrics Considered & Expected results
+For the visualization, the following metrics will be considered: Latency (p95 Response Time), Throughput (Requests/s), Error Rate.
+
+The visualization in Grafana is expected to demonstrate the superior performance of the paginated approach, with the non-paginated option starting to fail with a high number of requests sent per second.
+
+| Metric                | Paginated Endpoint   | Bulk Fetch Endpoint   |
+|-----------------------|----------------------|-----------------------|
+| **Latency (p95 Response Time)** | Low and stable across all load stages. | Will spike sharply under medium-to-high load (Stage 4+), leading to potential timeouts. |
+| **Throughput (Requests/s)** | High and sustained, processing many requests per second. | Will drop significantly, limited by the long processing time of each large request. |
+| **Error Rate** | Near 0%. | Will likely show a high percentage of timeouts or server errors at higher loads. |
+| **System Load (CPU/Memory)** | Moderate and predictable. | High peaks in both CPU and Memory as the service attempts to load and serialize 1000 objects concurrently for many users. |
 
 ### 10.3 Results
-The actual test experiment results confirm the expectations: as described in this article, the paginated API maintains response times within acceptable parameters even under concurrent load. In contrast, as illustrated in the figures, the bulk API begins to time out with 1000 concurrent API calls, highlighting the performance drawbacks of the non-paginated approach. Meanwhile, the paginated API continues to process requests efficiently, with its latency response to each request at most 2 seconds, 95% lower than the 60-second timeout the bulk API experiences. This results should validate the architectural decision to implement pagination as the standard for data retrieval endpoints that handle potentially large collections, ensuring the microservice remains performant and resilient under high concurrency.                    
+The actual test experiment results confirm the expectations: as described in the following article [Ben et al., 2021](#odown-api-response-time), the paginated API maintains response times within acceptable parameters even under concurrent load. In contrast, as illustrated in the figures, the bulk API begins to time out with 1000 concurrent API calls, highlighting the performance drawbacks of the non-paginated approach. Meanwhile, the paginated API continues to process requests efficiently, with its latency response to each request at most 2 seconds, 95% lower than the 60-second timeout the bulk API experiences. This results should validate the architectural decision to implement pagination as the standard for data retrieval endpoints that handle potentially large collections, ensuring the microservice remains performant and resilient under high concurrency.                    
+                  
 
 | Metric               | Paginated                                                                 | Non Paginated                                                                 |
 |----------------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------------|
@@ -632,6 +706,8 @@ The actual test experiment results confirm the expectations: as described in thi
 | Http Request Duration| ![Http Request Duration Pag](./img/pag-experiment/http-req-dur-pag.png)   | ![Http Request Duration Non Pag](./img/pag-experiment/http-req-dur-non-pag.png) |
 | VU Number            | ![VU Number Pag](./img/pag-experiment/vu-pag.png)                         | ![VU Number Non Pag](./img/pag-experiment/vu-non-pag.png)                     |
 
+### 10.4 Remaining risks and plans for future design iterations.
+As shown in the stress test performed in the previous section, the microservice currently provides excellent performance and scalability outcomes. In the future, to ensure responsiveness, the growing user base of the new hiking social platform will need the implementation of even more scaling strategies. As described in [Nunes et al., 2021](#nunes), this can be improved by using both horizontal scaling (e.g. deploying more service instances or pods using Kubernetes) and vertical scaling (e.g. improving individual instances by allocating more CPU or memory—to make sure the system maintains its efficiency under increased loads).
 
 
 ---
@@ -655,5 +731,11 @@ The team made use of LLMs (large language models) like ChatGPT mainly for wordin
 
 <a id="richardson">[6]</a> Richardson, C. (2018). *Microservices Patterns: With examples in Java.* Manning Publications.  
 
+<a id="pagination">[7]</a> Gowda, P., & Gowda, A. N. (2024). *Best practices in REST API design for enhanced scalability and security.* *Journal of Artificial Intelligence, Machine Learning and Data Science, 2*(1), 827–830. https://www.researchgate.net/profile/Priyanka-Gowda-Ashwath-Narayana-Gowda-2/publication/383599280_Best_Practices_in_REST_API_Design_for_Enhanced_Scalability_and_Security/links/67a54292461fb56424cc95a0/Best-Practices-in-REST-API-Design-for-Enhanced-Scalability-and-Security.pdf 
+
+<a id="alf-pagination-table-design">[8]</a> ALF Design Group. (2025, October 6). *Why Pagination Matters in Table Design: Improve UX, Performance & Scalability.* https://www.alfdesigngroup.com/post/why-pagination-is-important-for-table-design
 
 
+<a id="odown-api-response-time">[9]</a> Ben, F. (2024, October 18; updated May 19, 2025). *API Response Time Standards: What’s Good, Bad, and Unacceptable*. Odown Blog. https://odown.com/blog/api-response-time-standards/
+
+<a id="nunes">[10]</a> Nunes, J., Bianchi, T., Iwasaki, A., & Nakagawa, E. (2021). *State of the Art on Microservices Autoscaling: An Overview.* In *Anais do XLVIII Seminário Integrado de Software e Hardware* (pp. 30–38). Porto Alegre, RS, Brasil: SBC. https://doi.org/10.5753/semish.2021.15804
