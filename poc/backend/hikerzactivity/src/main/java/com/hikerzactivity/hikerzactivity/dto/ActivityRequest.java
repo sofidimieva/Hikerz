@@ -8,6 +8,7 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class ActivityRequest {
+    private String userId;
     private String title;
     private String description;
 }
