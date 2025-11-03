@@ -9,6 +9,7 @@
 - [Week 7](#week-7)
 - [Week 8](#week-8)
 - [Week 9](#week-9)
+- [Week 10](#week-10)
 
 
 # Week 1
@@ -83,3 +84,14 @@
 - Improve the presentation by adding new sections (3 hours):
   - Poc Validation
   - Experiment
+  
+# Week 10
+- Refactor the table of contents. (30 min)
+- Refactor the experiments section to also include remaining risks and plans for future design iterations. (30 min)
+- Add and improve sections from the finch report. (2 hours)
+  - Problem Statement and Motivation
+  - Stakeholders and Context (Interest Map) 
+  - Context problems
+  - External Risks and Dependencies
+  - Tech Stack
+- Include more references for my work. (30 min)
