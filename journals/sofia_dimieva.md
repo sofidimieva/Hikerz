@@ -46,3 +46,26 @@
 
 - Make 6 sequence diagrams for the main user flows (5 hours)
 - Work on heron report (6 hours)
+  
+# Week 7
+- Reviewed peer submission and provided personalized feedback (4 hours)
+- Brainstormed ideas for future work and improved the report (4 hours)
+- Restructured repository to associate activities with userId (6 hours)
+- Researched microservice interaction patterns between User and Activity services (3 hours)
+
+# Week 8
+- Attended optional TA meeting for POC feedback and next steps
+- Reviewed peer feedback and created improvement backlog (1 hour)
+- Designed presentation slides covering the high level architecture and made part of the Demo (4 hours)
+- Implemented User Service client in Activity Service for inter-microservice communication (8 hours)
+- Developed friends' activities API endpoint: (3 hours)
+  - Called User Service to retrieve following list 
+  - Fetched and sorted activities chronologically 
+
+# Week 9
+- Rehearsed final presentation (1 hour)
+- Attended final presentation and provided feedback on all teams (5 hours)
+- Investigated Redis Pub/Sub integration:(3 hours)
+  - Real-time communication between microservices 
+  - Specific topic structures for events suited for our architecture 
+- Work on final report (6 hour)

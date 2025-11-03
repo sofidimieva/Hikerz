@@ -53,7 +53,10 @@ public class ActivityService {
         this.mapboxToken = mapboxToken;
         }
     public void createActivity(ActivityRequest activityrequest){
-        Activity activity = Activity.builder().title(activityrequest.getTitle()).description(activityrequest.getDescription()).build();
+        Activity activity = Activity.builder().title(activityrequest.getTitle())
+        .description(activityrequest.getDescription())
+        .userId(activityrequest.getUserId())
+        .build();
         activityRepository.save(activity);
         log.info("Activity {} is saved", activity.getId());
     }

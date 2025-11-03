@@ -31,7 +31,7 @@ public class Activity {
     @JdbcTypeCode(SqlTypes.GEOMETRY)
     private LineString route;
 
-    @Column(name = "user_id", nullable = false)
+    @Column(name = "user_id")
     private String userId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
