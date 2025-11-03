@@ -84,9 +84,9 @@ Bogdan-Luca Paramon
     - [9.1.4, Direct HTTP/REST API Calls](#914-direct-httprest-api-calls)
     - [9.1.5. Shared Database with Polling](#915-shared-database-with-polling)
   - [9.2 Selected Pattern: Redis Publish–Subscribe](#92-selected-pattern-redis-publishsubscribe)
-  - [9.2.1. Low-latency real-time updates](#921-low-latency-real-time-updates)
-  - [9.2.2. Simple operational model for POC validation](#922-simple-operational-model-for-poc-validation)
-  - [9.2.3. Privacy-driven selective event propagation](#923-privacy-driven-selective-event-propagation)
+    - [9.2.1. Low-latency real-time updates](#921-low-latency-real-time-updates)
+    - [9.2.2. Simple operational model for POC validation](#922-simple-operational-model-for-poc-validation)
+    - [9.2.3. Privacy-driven selective event propagation](#923-privacy-driven-selective-event-propagation)
 - [10. Proof of concept](#10-proof-of-concept)
   - [10.1 Structure](#101-structure)
   - [10.2. Experiment](#102-experiment)
@@ -631,14 +631,14 @@ This involves contexts periodically querying a shared events table for new entri
 ### 9.2 Selected Pattern: Redis Publish–Subscribe
 Redis Pub/Sub is a lightweight and efficient messaging system that enables real-time communication between publishers and subscribers. It allows different services to exchange events asynchronously without direct dependencies. Publishers send messages to channels, and subscribers receive them instantly if they are subscribed to the corresponding channel. This makes Redis Pub/Sub ideal for distributed, event-driven systems requiring high responsiveness and minimal latency ([Redis Documentation, n.d.](#redis-doc)).
 
-### 9.2.1. Low-latency real-time updates
+#### 9.2.1. Low-latency real-time updates
 Hikerz requires immediate feedback when users log activities—such as instant updates to their statistics and challenge progress. Redis’s in-memory architecture enables sub-millisecond message propagation, ensuring that updates are visible almost instantly across User, Challenge, and Photo contexts ([Richardson, 2018](#richardson)). This near-real-time communication supports the platform’s gamified features, like leaderboards and achievement tracking, where responsiveness directly impacts user engagement.  
 
 
-### 9.2.2. Simple operational model for POC validation
+#### 9.2.2. Simple operational model for POC validation
 Unlike RabbitMQ or Kafka which require separate cluster management, Redis is already part of our technology stack for caching user sessions and activity feeds. Leveraging Redis Pub/Sub eliminates additional infrastructure complexity during our proof-of-concept phase, allowing our small team to validate the event-driven architecture without dedicating resources to message broker administration.
 
-### 9.2.3. Privacy-driven selective event propagation
+#### 9.2.3. Privacy-driven selective event propagation
  Hikers can mark activities as private, requiring complex filtering logic (PrivateHikeCannotBeShared policy). With Redis Pub/Sub, we implement privacy checks once in the Hike context publisher before emitting events to specific channels (e.g., hike.logged.public vs hike.logged.private), whereas polling or direct calls would require duplicate privacy validation in every consumer context, creating security vulnerabilities.
 
 To address Redis Pub/Sub's lack of message persistence, we implement a dual-write pattern: the Hike context persists HikeLogged events to PostgreSQL in an event sourcing table within the same transaction as the activity record, then publishes to Redis. Consumer contexts (User, Challenge, Photo) process events from Redis in real-time but can rebuild their state by replaying events from PostgreSQL on startup or after failures. This hybrid approach provides Redis's sub-millisecond delivery for the 99% case (active subscribers) while ensuring critical achievements and statistics aren't lost if a service restarts during event processing.
