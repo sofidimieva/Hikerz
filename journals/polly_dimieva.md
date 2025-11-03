@@ -47,3 +47,29 @@
 - researched on event communication patterns and did a comparative study (2 h)
 - add corresponding sections to the Heron report (2 hours)
 
+# Week 7
+- come up with ideas for future work and improved the report (4 hours)
+- reviewed peer submission and provided personalized feedback (4 hours)
+- researched and documented pricing models and their architectural implications (3 hours)
+  - analyzed subscription-based, pay-per-use, freemium, and tiered pricing strategies
+  - evaluated architectural requirements for each pricing model including scalability, payment integration, and user management
+
+# Week 8
+- reviewed peer feedback and created list of improvements to consider (2 hours)
+- attended optional TA meeting for POC feedback (1 hour)
+- created presentation slides covering the architectural overview and recorded parts of the Demo (4 hours)
+- conducted comparative analysis of event communication patterns for microservices (3 hours)
+  - evaluated Redis Pub/Sub, Producer-Consumer queues, Event Bus, HTTP/REST calls, and shared database polling
+  - analyzed trade-offs for each pattern including latency, decoupling, delivery guarantees, and scalability
+  - documented decision for selecting appropriate communication patterns for bounded contexts
+
+
+# Week 9
+- rehearsed final presentation (1 hour)
+- attended final presentation and provided feedback on all teams (5 hours)
+- researched Kubernetes deployment strategies for microservices architecture (3 hours)
+  - Explored container orchestration patterns for Spring Boot microservices
+  - Investigated service discovery, load balancing, and auto-scaling configurations
+- polishing final report (4 hours)
+
+
