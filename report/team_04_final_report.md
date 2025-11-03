@@ -54,11 +54,12 @@ Bogdan-Luca Paramon
     - [5.1.3. Components Diagram (C3)](#513-components-diagram-c3)
     - [5.1.4 Code Diagram (C4 – Activity Service Example)](#514-code-diagram-c4--activity-service-example)
   - [5.2. Sequence Diagrams](#52-sequence-diagrams)
-    - [2.1 Scenario A — Create Hike](#21-scenario-a--create-hike)
-    - [5.2.2. Scenario C — View “Friends’ Hikes”](#522-scenario-c--view-friends-hikes)
-    - [5.2.3. Scenario D — Join Challenge](#523-scenario-d--join-challenge)
-    - [5.2.4. Scenario E — Create Challenge](#524-scenario-e--create-challenge)
-    - [5.2.5 Scenario F — View Statistics](#525-scenario-f--view-statistics)
+    - [5.2.1 Scenario A — Create Hike](#521-scenario-a--create-hike)
+    - [5.2.2 Scenario B — View “My Hikes”](#522-scenario-b--view-my-hikes)
+    - [5.2.3 Scenario C — View “Friends’ Hikes”](#523-scenario-c--view-friends-hikes)
+    - [5.2.4 Scenario D — Join Challenge](#524-scenario-d--join-challenge)
+    - [5.2.5 Scenario E — Create Challenge](#525-scenario-e--create-challenge)
+    - [5.2.6 Scenario F — View Statistics](#526-scenario-f--view-statistics)
   - [5.3 Proof-of-Concept Validation](#53-proof-of-concept-validation)
 - [6. Elaboration of Specific Architectural Decisions and Alternatives](#6-elaboration-of-specific-architectural-decisions-and-alternatives)
     - [6.1 Tech Stack](#61-tech-stack)
@@ -187,16 +188,81 @@ Bogdan-Luca Paramon
 #### 5.1.4 Code Diagram (C4 – Activity Service Example)
 
 ### 5.2. Sequence Diagrams
+The system’s dynamic behavior is modelled by Sequence Diagrams. 
+These diagrams capture runtime interactions among users, frontend, backend 
+microservices, databases, and external APIs, illustrating how the architecture supports 
+functional requirements and quality attributes such as performance, scalability, and 
+separation of concerns. Each diagram represents a core user-driven scenario in the Hikerz 
+system. By decomposing them individually, we highlight service responsibilities and 
+boundaries while maintaining traceability to the problem statement and architectural 
+decisions.  
 
-#### 2.1 Scenario A — Create Hike  
 
-#### 5.2.2. Scenario C — View “Friends’ Hikes” 
+#### 5.2.1 Scenario A — Create Hike  
 
-#### 5.2.3. Scenario D — Join Challenge  
+This diagram shows the flow when a user logs a new hike by submitting metadata (title, 
+distance, difficulty) and attachments (GPX + image). 
+The Activity Service validates input, parses the GPX file into geometry, stores the hike in 
+PostgreSQL/PostGIS, and returns a confirmation response to the frontend. 
+Optionally, a HikeLogged event is published to Redis for asynchronous updates to statistics 
+and leaderboards.  
 
-#### 5.2.4. Scenario E — Create Challenge
+![Scenario A — Create Hike](./img/A.png)  
+*Figure 1: Sequence diagram for the "Create Hike" scenario.*
 
-#### 5.2.5 Scenario F — View Statistics  
+#### 5.2.2 Scenario B — View “My Hikes”  
+For the user to view their previously logged hikes, the Frontend requests the list of hikes 
+from the Activity Service, which queries the Activity Database and returns paginated results. 
+For each hike, GeoJSON route data is fetched separately and rendered interactively via 
+Mapbox, ensuring efficient data transfer and scalable rendering. 
+This process allows the user to visually explore their activity history with minimal loading 
+time.  
+
+![Scenario B — View “My Hikes”](./img/B.png)  
+*Figure 2: Sequence diagram for the "View My Hikes" scenario.*
+
+#### 5.2.3 Scenario C — View “Friends’ Hikes” 
+For the user to discover hikes shared by friends, the Frontend first retrieves the friend list 
+from the User Service, then queries the Activity Service for public or friend-visible hikes. 
+Each route is fetched as GeoJSON and rendered through Mapbox, while privacy filtering is 
+enforced server-side. 
+This flow demonstrates how cross-service data retrieval supports community-based features 
+while maintaining secure visibility rules.  
+
+![Scenario C — View “Friends’ Hikes”](./img/C.png)  
+*Figure 3: Sequence diagram for the "View Friends’ Hikes" scenario.*
+
+#### 5.2.4 Scenario D — Join Challenge  
+For the user to participate in an active challenge, the Frontend sends a request to the 
+Challenge Service, which records the user’s participation in the Challenge Database. 
+The User Service is then updated to reflect the new joined challenge. 
+This sequence highlights controlled data consistency and interaction between the Challenge 
+and User bounded contexts.  
+
+![Scenario D — Join Challenge](./img/D.png)  
+*Figure 4: Sequence diagram for the "Join Challenge" scenario.*
+
+#### 5.2.5 Scenario E — Create Challenge
+For the user to create a new challenge, the Challenge Service validates the input data and 
+stores the new challenge in the Challenge Database. 
+It then triggers an update in the User Service to associate the challenge ownership with the 
+creator. 
+This scenario demonstrates the enforcement of the Separation of Concerns (SoC) principle, 
+ensuring clean ownership boundaries across services.  
+
+![Scenario E — Create Challenge](./img/E.png)  
+*Figure 5: Sequence diagram for the "Create Challenge" scenario.*
+
+#### 5.2.6 Scenario F — View Statistics  
+For the user to analyze their hiking performance, the Frontend requests aggregated statistics 
+from the Activity Service. 
+The service executes spatial and numerical aggregations directly in PostGIS, returning a 
+summary JSON object containing total distance, elevation gain, and average pace. 
+The frontend visualizes this data locally through charts and summaries, providing an 
+interactive performance dashboard with minimal latency.  
+
+![Scenario F — View Statistics](./img/F.png)  
+*Figure 6: Sequence diagram for the "View Statistics" scenario.*
 
 ### 5.3 Proof-of-Concept Validation
 In the following sections, we make some important decisions involving the architectural design of the app. As a result, this choices need to be measured. Therefore, we continue by creating a PoC (Proof of Concept) on which we perform certain experiments. Some evaluations were manual (e.g. verifying that the backend can render a map via a third-party service and display a user’s hike), while others were automated stress tests simulating scalability, latency, and resilience. As detailed in the final section, the experimental results validate the assumptions made in our initial design.
@@ -235,6 +301,57 @@ The bulk fetching approach retrieves the entire collection of data in a single H
 ## 7. Assessment of impact of Cloud vs On-Premises Deployment
 
 #### 7.1 PostgreSQL
+
+An essential architectural decision for Hikerz concerned the deployment 
+model for persistent data storage across its microservices (User, Activity, and 
+Challenge). The decision had to balance performance, scalability, cost, and 
+geospatial query efficiency, given Hikerz’s heavy reliance on map-based 
+functionality and spatial analysis.
+
+The evaluation considered three primary options: Amazon S3 (Cloud Object 
+Storage), a Cloud Relational Database Service (AWS RDS for PostgreSQL), 
+and a dedicated On-Premises PostgreSQL deployment. Each option was 
+assessed for its ability to support Hikerz’s core requirements for 
+ACID-compliant transactions, complex spatial queries, and low-latency data 
+access.
+
+Amazon S3 was initially considered for its scalability, durability, and low 
+operational cost . However, as an object storage service, S3 
+lacks the transactional and relational capabilities required for user data, hikes, 
+and challenges. It does not enforce ACID properties or support SQL queries 
+and geospatial operations , making it unsuitable 
+as a primary data store. While S3 performs well for static assets such as images 
+or GPX files, it cannot replace a relational database for dynamic, 
+query-intensive data.
+
+Cloud RDBMS solutions such as AWS RDS for PostgreSQL were also 
+evaluated for their elasticity and reduced administrative burden. Managed services automate replication, 
+scaling, and backups, simplifying deployment. However, these benefits come 
+at the cost of limited configuration control, potential vendor lock-in, and 
+variable network latency. For Hikerz, this lack of fine-grained tuning is 
+critical, especially for PostGIS-based spatial queries that must execute in 
+milliseconds to support map rendering and route visualization.
+
+Ultimately, Hikerz adopted an on-premises PostgreSQL deployment model, 
+assigning a dedicated instance to each microservice. This approach provides 
+complete control over the database configuration, hardware allocation, and 
+indexing strategy, ensuring predictable performance and low-latency access. 
+The ability to directly optimize PostGIS and manage data locality gives 
+on-premises PostgreSQL a significant advantage for geospatially intensive 
+workloads . While this decision increases initial setup 
+and maintenance costs, it ensures long-term scalability, compliance, and 
+autonomy over the system’s most critical data layer.
+
+Criterion | Amazon S3 (Cloud Object Storage) | Cloud RDBMS (AWS RDS for PostgreSQL) | On-Premises PostgreSQL
+---|---|---|---
+Type | Object storage | Managed relational database | Self-managed relational database
+Data Model | Key-value (unstructured) | Structured, relational | Structured, relational
+Transactional Support | Not supported  | Supported | Supported
+Geospatial Capabilities | None | PostGIS supported (limited tuning)  | Full PostGIS support with hardware-level tuning 
+Performance and Latency | Optimized for storage, not query performance | Moderate, network-dependent  | High performance, low latency 
+Scalability | Extremely high  | High (automated scaling) | Scalable with manual configuration
+Control and Customization | Minimal | Limited (provider templates) | Full administrative and hardware control 
+Cost Model | Low operational cost | Moderate recurring cost  | Higher initial cost, lower long-term operational cost 
 
 #### 7.2 Mapbox
 
