@@ -115,7 +115,7 @@ Bogdan-Luca Paramon
 
 #### 2.4.1 Introduction to Wardley Maps
 
-In the context of Hikerz, an app that seeks to differentiate itself from existing platforms like Strava and Komoot, Wardley maps can be a valuable tool in understanding the evolution of the app and plan the strategic direction. Below is an analysis of how the main elements of Hikerz may evolve over time, mapped from Genesis to Commodity.
+In the context of Hikerz, an app that seeks to differentiate itself from existing platforms like Strava and Komoot, Wardley Maps ([Team, n.d.](#wardley)) can be a valuable tool in understanding the evolution of the app and plan the strategic direction. Below is an analysis of how the main elements of Hikerz may evolve over time, mapped from Genesis to Commodity.
 
 #### 2.4.2 Wardley Maps Analysis
 
@@ -250,7 +250,7 @@ By doing this analysis, the team can take multiple conclusions: - Genesis to Cus
 
 ##### 7.2.1 Introduction:
 
-Mapbox is a platform for custom mapping and location-based services. It offers tools for developers to create interactive maps, visualizations, and other geolocation services. It provides APIs and SDKs for mapping, navigation, and location tracking, and enables developers to design custom map styles, generate routes, and analyze geospatial data. In the following section, Mapbox will be compared with other popular mapping providers. This will be done rigorously by considering the following criteria: Data, Trail Visualization, Styling, Ecosystem, Cost, Offline Support, and Popularity. All of these criteria will be evaluated with the needs of our application in mind.
+Mapbox is a platform for custom mapping and location-based services. It offers tools for developers to create interactive maps, visualizations, and other geolocation services. It provides APIs and SDKs ([Mobile Maps in 3D for iOS and Android, n.d.](#mapbox)) for mapping, navigation, and location tracking, and enables developers to design custom map styles, generate routes, and analyze geospatial data. In the following section, Mapbox will be compared with other popular mapping providers using several resources for our research such as this Wikipedia ([Wikipedia contributors, 2025](#wiki)) page, its links and imbircated sources. This will be done rigorously by considering the following criteria: Data, Trail Visualization, Styling, Ecosystem, Cost, Offline Support, and Popularity. All of these criteria will be evaluated with the needs of our application in mind.
 
 ##### 7.2.2 Table for Comparison
 
@@ -307,3 +307,9 @@ The team made use of LLMs (large language models) like ChatGPT mainly for wordin
 
 ---
 ## References
+
+<a id="wardley">[1]</a> Team, W. M. (n.d.). The four stages of evolution. Wardley Maps. https://www.wardleymaps.com/book-passages/wardley-on-evolution
+
+<a id="wiki">[2]</a> Wikipedia contributors. (2025, September 24). Comparison of web map services. Wikipedia. https://en.wikipedia.org/wiki/Comparison_of_web_map_services
+
+<a id="mapbox">[3]</a> Mobile maps in 3D for iOS and Android. (n.d.). https://www.mapbox.com/mobile-maps-sdk#get-started
