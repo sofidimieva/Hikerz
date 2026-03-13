@@ -1,5 +1,3 @@
-# README.md
-// filepath: README.md
 # Hikerz
 
 Hikerz is an application for tracking and managing hiking activities. Originally developed as a university team project, it is now maintained privately.
